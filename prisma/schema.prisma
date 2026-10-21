@@ -1,5 +1,6 @@
 // Listo — modelo de datos (Prisma 7 + PostgreSQL)
 // La URL de la base está en prisma.config.ts, no acá.
+// Modelos y campos en español (dominio); tablas, columnas y tipos de la base en inglés (@map / @@map).
 
 generator client {
   provider = "prisma-client"
@@ -13,6 +14,8 @@ datasource db {
 enum TipoPuesto {
   ASIGNATURA
   CARGO
+
+  @@map("position_type")
 }
 
 enum SituacionRevista {
@@ -20,12 +23,16 @@ enum SituacionRevista {
   PROVISIONAL
   SUPLENTE
   EXTERNO
+
+  @@map("employment_status")
 }
 
 enum Turno {
   MANANA
   TARDE
   VESPERTINO
+
+  @@map("shift")
 }
 
 enum TipoEvento {
@@ -39,94 +46,96 @@ enum TipoEvento {
   CAMBIO_EMAIL     // lo hizo la directora desde el panel
   BAJA
   REACTIVACION
+
+  @@map("event_type")
 }
 
 model Ciclo {
   id               Int          @id @default(autoincrement())
-  anio             Int          @unique
-  inscripcionDesde DateTime     @map("inscripcion_desde") @db.Date
-  inscripcionHasta DateTime     @map("inscripcion_hasta") @db.Date
+  anio             Int          @unique @map("year")
+  inscripcionDesde DateTime     @map("registration_from") @db.Date
+  inscripcionHasta DateTime     @map("registration_until") @db.Date
   // Un solo ciclo activo: índice único parcial en migración manual (ver docs/plan.md, Etapa 1)
-  activo           Boolean      @default(false)
-  creadoEn         DateTime     @default(now()) @map("creado_en")
+  activo           Boolean      @default(false) @map("active")
+  creadoEn         DateTime     @default(now()) @map("created_at")
   postulantes      Postulante[]
 
-  @@map("ciclo")
+  @@map("cycle")
 }
 
 model Puesto {
   id            Int           @id @default(autoincrement())
-  nombre        String        @unique
-  tipo          TipoPuesto
+  nombre        String        @unique @map("name")
+  tipo          TipoPuesto    @map("type")
   // Un puesto con postulaciones no se borra: se desactiva
-  activo        Boolean       @default(true)
+  activo        Boolean       @default(true) @map("active")
   postulaciones Postulacion[]
   eventos       Evento[]
 
-  @@map("puesto")
+  @@map("position")
 }
 
 model Postulante {
   id               Int              @id @default(autoincrement())
-  cicloId          Int              @map("ciclo_id")
+  cicloId          Int              @map("cycle_id")
   ciclo            Ciclo            @relation(fields: [cicloId], references: [id])
   dni              String           // solo dígitos
-  apellido         String
-  nombre           String
+  apellido         String           @map("last_name")
+  nombre           String           @map("first_name")
   email            String           // normalizado: trim + minúsculas
-  telefono         String
-  situacionRevista SituacionRevista @map("situacion_revista")
-  antiguedadMeses  Int              @map("antiguedad_meses")
-  turnos           Turno[]
-  dadoDeBaja       Boolean          @default(false) @map("dado_de_baja")
-  creadoEn         DateTime         @default(now()) @map("creado_en")
-  actualizadoEn    DateTime         @updatedAt @map("actualizado_en")
+  telefono         String           @map("phone")
+  situacionRevista SituacionRevista @map("employment_status")
+  antiguedadMeses  Int              @map("seniority_months")
+  turnos           Turno[]          @map("shifts")
+  dadoDeBaja       Boolean          @default(false) @map("deactivated")
+  creadoEn         DateTime         @default(now()) @map("created_at")
+  actualizadoEn    DateTime         @updatedAt @map("updated_at")
   postulaciones    Postulacion[]
   eventos          Evento[]
 
   @@unique([cicloId, dni])
   @@index([cicloId, dadoDeBaja])
-  @@map("postulante")
+  @@map("applicant")
 }
 
 model Postulacion {
-  postulanteId    Int        @map("postulante_id")
+  postulanteId    Int        @map("applicant_id")
   postulante      Postulante @relation(fields: [postulanteId], references: [id], onDelete: Cascade)
-  puestoId        Int        @map("puesto_id")
+  puestoId        Int        @map("position_id")
   puesto          Puesto     @relation(fields: [puestoId], references: [id])
-  puntaje         Decimal    @db.Decimal(5, 2)
-  verificado      Boolean    @default(false)
+  puntaje         Decimal    @map("score") @db.Decimal(5, 2)
+  verificado      Boolean    @default(false) @map("verified")
   // true cuando el docente cambió el puntaje después de la última verificación
-  modificado      Boolean    @default(false)
+  modificado      Boolean    @default(false) @map("modified")
   // puntaje previo al último cambio; se limpia al verificar
-  puntajeAnterior Decimal?   @map("puntaje_anterior") @db.Decimal(5, 2)
-  verificadoEn    DateTime?  @map("verificado_en")
+  puntajeAnterior Decimal?   @map("previous_score") @db.Decimal(5, 2)
+  verificadoEn    DateTime?  @map("verified_at")
 
   @@id([postulanteId, puestoId])
   @@index([puestoId])
-  @@map("postulacion")
+  @@map("application")
 }
 
 model Evento {
   id           Int        @id @default(autoincrement())
-  postulanteId Int        @map("postulante_id")
+  postulanteId Int        @map("applicant_id")
   postulante   Postulante @relation(fields: [postulanteId], references: [id], onDelete: Cascade)
-  tipo         TipoEvento
-  puestoId     Int?       @map("puesto_id")
+  tipo         TipoEvento @map("type")
+  puestoId     Int?       @map("position_id")
   puesto       Puesto?    @relation(fields: [puestoId], references: [id])
   // valores anterior/nuevo según el tipo, p. ej. { "anterior": "36.10", "nuevo": "38.45" }
-  detalle      Json?
-  fecha        DateTime   @default(now())
+  detalle      Json?      @map("detail")
+  fecha        DateTime   @default(now()) @map("occurred_at")
 
   @@index([postulanteId, fecha])
-  @@map("evento")
+  @@map("event")
 }
 
 model Admin {
   id           Int      @id @default(autoincrement())
   email        String   @unique
   passwordHash String   @map("password_hash")
-  creadoEn     DateTime @default(now()) @map("creado_en")
+  creadoEn     DateTime @default(now()) @map("created_at")
   sesiones     Sesion[]
 
   @@map("admin")
@@ -137,9 +146,9 @@ model Sesion {
   tokenHash String   @id @map("token_hash")
   adminId   Int      @map("admin_id")
   admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  expiraEn  DateTime @map("expira_en")
-  creadoEn  DateTime @default(now()) @map("creado_en")
+  expiraEn  DateTime @map("expires_at")
+  creadoEn  DateTime @default(now()) @map("created_at")
 
   @@index([expiraEn])
-  @@map("sesion")
+  @@map("session")
 }

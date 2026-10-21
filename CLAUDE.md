@@ -14,8 +14,10 @@ Tiene dos partes:
 - **Respondé siempre en español.** El dueño del proyecto (Ian) no lee inglés.
 - Toda la interfaz va en español rioplatense (vos): textos, mensajes de error y validaciones.
   Las rutas del navegador también (`/panel/ingresar`, `/panel/configuracion`), porque las ve la gente.
-- **Endpoints de la API y nombres de archivos y carpetas van en inglés** (`/api/public/registration`,
-  `domain/normalize.ts`, `features/registration/`).
+- **Endpoints de la API, nombres de archivos y carpetas, y el esquema de la base (tablas, columnas,
+  tipos e índices) van en inglés** (`/api/public/registration`, `domain/normalize.ts`,
+  `features/registration/`, tabla `applicant`). Los modelos y campos de Prisma quedan en español y
+  se mapean con `@map` / `@@map`.
 - Comentarios de código, mensajes de commit y nombres de dominio en el código van en español
   (`postulante`, `postulacion`, `puesto`, `ciclo`). Los campos del JSON y los códigos de error de la
   API también. Los términos técnicos estándar (`service`, `guard`, `route`) quedan como son.

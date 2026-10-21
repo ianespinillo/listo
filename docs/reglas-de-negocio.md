@@ -20,7 +20,7 @@ plataforma @abc es otra cosa y no se integra.
 
 `grupo` según la situación de revista:
 
-| situacion_revista | grupo |
+| situacionRevista | grupo |
 |---|---|
 | `TITULAR` | 1 |
 | `PROVISIONAL`, `SUPLENTE` | 2 |
@@ -41,37 +41,38 @@ El **número de orden** es global: va de 1 a N recorriendo grupo 1, después 2 y
 
 ### SQL (usar con `prisma.$queryRaw`, parametrizado)
 
-Los nombres de tablas y columnas son los del `@@map` / `@map` de `prisma/schema.prisma`.
+Los nombres de tablas, columnas y tipos de la base están en inglés: son los del `@@map` / `@map`
+de `prisma/schema.prisma`. Los campos del modelo de Prisma siguen en español.
 
 ```sql
 WITH base AS (
   SELECT
-    p.id, p.apellido, p.nombre, p.dni, p.telefono,
-    p.situacion_revista, p.antiguedad_meses, p.turnos,
-    po.puntaje, po.verificado, po.modificado, po.puntaje_anterior,
-    CASE p.situacion_revista
+    a.id, a.last_name, a.first_name, a.dni, a.phone,
+    a.employment_status, a.seniority_months, a.shifts,
+    ap.score, ap.verified, ap.modified, ap.previous_score,
+    CASE a.employment_status
       WHEN 'TITULAR'     THEN 1
       WHEN 'PROVISIONAL' THEN 2
       WHEN 'SUPLENTE'    THEN 2
       ELSE 3
     END AS grupo
-  FROM postulacion po
-  JOIN postulante  p ON p.id = po.postulante_id
-  WHERE po.puesto_id   = ${puestoId}
-    AND p.ciclo_id     = ${cicloId}
-    AND p.dado_de_baja = false
-    AND (${turno}::text IS NULL OR ${turno}::"Turno" = ANY (p.turnos))
-    AND (${soloVerificados} = false OR po.verificado = true)
+  FROM application ap
+  JOIN applicant   a ON a.id = ap.applicant_id
+  WHERE ap.position_id = ${puestoId}
+    AND a.cycle_id     = ${cicloId}
+    AND a.deactivated  = false
+    AND (${turno}::text IS NULL OR ${turno}::shift = ANY (a.shifts))
+    AND (${soloVerificados} = false OR ap.verified = true)
 )
 SELECT
   base.*,
   ROW_NUMBER() OVER (
     ORDER BY
       grupo,
-      CASE WHEN grupo = 1      THEN antiguedad_meses END DESC NULLS LAST,
-      CASE WHEN grupo IN (2,3) THEN puntaje          END DESC NULLS LAST,
-      CASE WHEN grupo = 2      THEN antiguedad_meses END DESC NULLS LAST,
-      apellido, nombre, id
+      CASE WHEN grupo = 1      THEN seniority_months END DESC NULLS LAST,
+      CASE WHEN grupo IN (2,3) THEN score            END DESC NULLS LAST,
+      CASE WHEN grupo = 2      THEN seniority_months END DESC NULLS LAST,
+      last_name, first_name, id
   ) AS orden
 FROM base
 ORDER BY orden;
@@ -79,7 +80,7 @@ ORDER BY orden;
 
 Notas:
 - Usar el tagged template de `$queryRaw` (nunca `$queryRawUnsafe`) para que los parámetros vayan escapados.
-- Revisar el cast del enum `Turno` contra el nombre real del tipo que cree la migración.
+- El enum `Turno` se llama `shift` en la base (`@@map`); revisar el cast contra la migración.
 - Los `Decimal` de Prisma y los `bigint` de `ROW_NUMBER` hay que convertirlos antes de mandarlos como JSON.
 - Ordenar con "Solo verificados" es filtrar antes de numerar, así que el orden se renumera. Es lo esperado: la directora ve a quién llamar entre los verificados.
 

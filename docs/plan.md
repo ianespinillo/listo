@@ -26,7 +26,7 @@ Una etapa por vez. Al terminar cada una: resumir qué se hizo, cómo probarlo y 
 
 - `prisma/seed.ts`: ciclo del año siguiente activo, con inscripción abierta desde hoy por 30 días, y los puestos de ejemplo de los mockups.
 - `scripts/create-admin.ts`: pide email y contraseña por consola (la contraseña sin mostrarla), guarda el hash con bcryptjs y, si el email ya existe, actualiza la contraseña.
-- Garantizar un solo ciclo activo. Opción recomendada: índice único parcial en una migración SQL manual, `CREATE UNIQUE INDEX ciclo_un_activo ON ciclo (activo) WHERE activo;`.
+- Garantizar un solo ciclo activo. Opción recomendada: índice único parcial en una migración SQL manual, `CREATE UNIQUE INDEX cycle_single_active ON cycle (active) WHERE active;`.
 
 **Aceptación**: el seed se puede correr dos veces sin duplicar datos, y `create-admin` funciona.
 
