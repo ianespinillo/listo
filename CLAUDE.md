@@ -77,8 +77,10 @@ src/
       panel/              → login, listado, detalle, ciclo y puestos
   server/                 → solo servidor; NUNCA se importa desde src/app
     db.ts                 → instancia de PrismaClient
+    api/index.ts          → createApiRouter: /health, /public y /panel
     api/public.ts
-    api/panel.ts
+    api/panel/            → sesión, listado, postulantes, puestos y ciclos
+    test/                 → infraestructura de tests (base de prueba, guarda, helpers)
     domain/               → lógica pura: orden, diff de postulaciones, normalización
 scripts/
   create-admin.ts         → crea o actualiza la usuaria del panel

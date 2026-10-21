@@ -21,10 +21,10 @@
 
 ## Tareas
 
-- [ ] T1. Sesión: login, logout, sesión, `requireSession`, guarda de `Content-Type` y rate limit del login.
-- [ ] T2. Listado: SQL del §2 con `$queryRaw`, `GET /api/panel/listing` y **todos** los tests de orden del §2.
-- [ ] T3. Postulantes: detalle (con `group`/`order`), edición de email, baja/reactivación y verificación.
-- [ ] T4. Puestos y ciclos.
+- [x] T1. Sesión: login, logout, sesión, `requireSession`, guarda de `Content-Type` y rate limit del login. (delegated; `8b2be91`)
+- [x] T2. Listado: SQL del §2 con `$queryRaw`, `GET /api/panel/listing` y **todos** los tests de orden del §2. (delegated; `867ccea`)
+- [x] T3. Postulantes: detalle (con `group`/`order`), edición de email, baja/reactivación y verificación. (delegated; `4e23bed`)
+- [x] T4. Puestos y ciclos. (delegated; `8ef4b0d`; docs `ee45035`)
 
 ## Aceptación (plan)
 
@@ -35,7 +35,13 @@
 
 ## Progreso / evidencia
 
-(pendiente)
+- `pnpm test`: 9 archivos, 145 tests OK (session 30, listing 22, applicants 22, cycles 13, positions 10, más los 48 de la etapa 2). Re-ejecutado por el coordinador sobre el árbol final: 145/145.
+- `tsc -p tsconfig.server.json` sin errores; `pnpm build` OK.
+- Smoke en servidor real: login 204 → listing 200 (3 grupos) → positions/cycles 200 → logout 204 → listing 401. Admin y sesión de prueba borrados.
+- SQL del §2 sin cambios de lógica; dos casts agregados: `a.shifts::text[]` y `${onlyVerified}::boolean`. Sin `$queryRawUnsafe` en código de producción.
+- Desvíos: el router del panel monta su propio `cookie-parser` (los tests lo usan sin `server.ts`); orden de capas 415 → login/logout → `requireSession`; `PUT .../verification` devuelve la misma forma que `applications[]` del detalle; sin puestos activos → `position: null`.
+- Bug encontrado por un test y corregido: zod 4 corre los `refine` aunque falle el `regex`; una fecha ilegible daba 500.
+- Coordinador: revertido un `cli.analytics` que agregó la CLI de Angular a `angular.json`; la versión T4 del router que dejó el writer no montaba ciclos — se commiteó la versión final, que sí lo hace.
 
 ## Mirror Engram
 
