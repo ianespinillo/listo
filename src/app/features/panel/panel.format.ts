@@ -52,6 +52,11 @@ export function formatSeniorityShort(months: number): string {
   return `${Math.floor(months / 12)} a ${months % 12} m`;
 }
 
+/** Antigüedad corta que acepta null: 110 -> "9 a 2 m", null -> "—" */
+export function formatSeniorityShortOrDash(months: number | null): string {
+  return months === null ? '—' : formatSeniorityShort(months);
+}
+
 /** 110 -> "9 años 2 meses" */
 export function formatSeniorityLong(months: number): string {
   const years = Math.floor(months / 12);

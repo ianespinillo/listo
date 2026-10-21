@@ -32,7 +32,7 @@ import {
   STATUS_BADGE,
   STATUS_LABEL,
   formatScore,
-  formatSeniorityShort,
+  formatSeniorityShortOrDash,
 } from '../panel.format';
 
 type ViewState = 'loading' | 'ready' | 'notFound' | 'error';
@@ -44,8 +44,8 @@ interface GroupInfo {
 
 /** Títulos y reglas de orden de cada grupo del decreto (textos del mockup). */
 const GROUPS: Record<number, GroupInfo> = {
-  1: { title: 'Titulares de la escuela', rule: 'Ordenados por antigüedad docente' },
-  2: { title: 'Provisionales y suplentes', rule: 'Por puntaje; si empatan, por antigüedad' },
+  1: { title: 'Titulares de la escuela', rule: 'Titulares, por antigüedad en el establecimiento' },
+  2: { title: 'Provisionales y suplentes', rule: 'Por puntaje; si empatan, por antigüedad docente' },
   3: { title: 'Docentes de otras escuelas', rule: 'Por puntaje del Listado Oficial' },
 };
 
@@ -222,5 +222,5 @@ export class Listing {
   protected readonly statusBadge = STATUS_BADGE;
   protected readonly statusLabel = STATUS_LABEL;
   protected readonly score = formatScore;
-  protected readonly seniority = formatSeniorityShort;
+  protected readonly seniority = formatSeniorityShortOrDash;
 }

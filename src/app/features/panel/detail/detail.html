@@ -67,6 +67,10 @@
             <div><dt>Situación de revista</dt><dd>{{ employment[a.employmentStatus] }}</dd></div>
             <div><dt>Antigüedad docente</dt><dd class="num">{{ seniorityLong(a.seniorityMonths) }}</dd></div>
             <div>
+              <dt>Antigüedad en la escuela</dt>
+              <dd class="num">{{ a.schoolSeniorityMonths === null ? '—' : seniorityLong(a.schoolSeniorityMonths) }}</dd>
+            </div>
+            <div>
               <dt>Turnos</dt>
               <dd class="chips">
                 @for (shift of orderedShifts(); track shift) {

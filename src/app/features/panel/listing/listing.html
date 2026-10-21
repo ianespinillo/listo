@@ -135,7 +135,8 @@
                     <th scope="col">Orden</th>
                     <th scope="col">Docente</th>
                     <th scope="col">Situación</th>
-                    <th scope="col">Antigüedad</th>
+                    <th scope="col">Antig. escuela</th>
+                    <th scope="col">Antig. docente</th>
                     <th scope="col">Puntaje</th>
                     <th scope="col">Turnos</th>
                     <th scope="col">Estado</th>
@@ -152,7 +153,8 @@
                         <span class="num dni">DNI {{ row.dni }}</span>
                       </td>
                       <td>{{ employment[row.employmentStatus] }}</td>
-                      <td class="num" [class.hl]="group.group === 1">{{ seniority(row.seniorityMonths) }}</td>
+                      <td class="num" [class.hl]="group.group === 1">{{ seniority(row.schoolSeniorityMonths) }}</td>
+                      <td class="num">{{ seniority(row.seniorityMonths) }}</td>
                       <td class="num score" [class.hl]="group.group !== 1">{{ score(row.score) }}</td>
                       <td>
                         <span class="shifts">

@@ -95,6 +95,9 @@
               </div>
               <span class="badge">{{ employmentLabel(s.employmentStatus) }}</span>
             </div>
+            @if (s.schoolSeniorityMonths !== null) {
+              <p class="hint">Antigüedad en esta escuela: <span class="num">{{ schoolSeniority(s.schoolSeniorityMonths) }}</span></p>
+            }
             <ul class="chips" aria-label="Turnos">
               @for (shift of s.shifts; track shift) {
                 <li>{{ shiftLabel(shift) }}</li>
@@ -261,6 +264,38 @@
                 <p class="error" id="e-months">Meses: {{ msg }}</p>
               }
             </fieldset>
+
+            @if (asksSchoolSeniority()) {
+              <fieldset class="group"
+                [attr.aria-describedby]="
+                  'h-school ' +
+                  (errorOf(form.controls.schoolYears, required.schoolYears) ? 'e-school-years ' : '') +
+                  (errorOf(form.controls.schoolMonths, required.schoolMonths) ? 'e-school-months' : '')
+                ">
+                <legend>Antigüedad en esta escuela</legend>
+                <p class="hint" id="h-school">El tiempo que llevás trabajando en esta escuela. No puede superar tu antigüedad docente.</p>
+                <div class="pair">
+                  <div class="field">
+                    <input id="f-schoolYears" class="input num" type="number" inputmode="numeric" min="0" max="60"
+                      step="1" formControlName="schoolYears" placeholder="0"
+                      [attr.aria-invalid]="errorOf(form.controls.schoolYears, required.schoolYears) ? 'true' : null" />
+                    <label for="f-schoolYears" class="sub">Años</label>
+                  </div>
+                  <div class="field">
+                    <input id="f-schoolMonths" class="input num" type="number" inputmode="numeric" min="0" max="11"
+                      step="1" formControlName="schoolMonths" placeholder="0"
+                      [attr.aria-invalid]="errorOf(form.controls.schoolMonths, required.schoolMonths) ? 'true' : null" />
+                    <label for="f-schoolMonths" class="sub">Meses</label>
+                  </div>
+                </div>
+                @if (errorOf(form.controls.schoolYears, required.schoolYears); as msg) {
+                  <p class="error" id="e-school-years">Años: {{ msg }}</p>
+                }
+                @if (errorOf(form.controls.schoolMonths, required.schoolMonths); as msg) {
+                  <p class="error" id="e-school-months">Meses: {{ msg }}</p>
+                }
+              </fieldset>
+            }
           </section>
 
           <!-- 3. Turnos -->

@@ -52,6 +52,30 @@ export function integerBetween(min: number, max: number): ValidatorFn {
   };
 }
 
+export const SCHOOL_SENIORITY_TOO_HIGH = 'No puede ser mayor que tu antigüedad docente.';
+
+const isWhole = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value);
+
+/**
+ * Años de antigüedad en la escuela: entero entre 0 y 60 y, junto con los meses, no mayor que la
+ * antigüedad docente (controles hermanos `schoolMonths`, `seniorityYears` y `seniorityMonths`).
+ * El error de la comparación va en los años, igual que en el servidor.
+ */
+export const schoolYearsValidator: ValidatorFn = (control) => {
+  const own = integerBetween(0, 60)(control);
+  if (own) return own;
+  const group = control.parent;
+  if (!group) return null;
+  const years = control.value as unknown;
+  const months = group.get('schoolMonths')?.value as unknown;
+  const teachingYears = group.get('seniorityYears')?.value as unknown;
+  const teachingMonths = group.get('seniorityMonths')?.value as unknown;
+  if (![years, months, teachingYears, teachingMonths].every(isWhole)) return null;
+  const school = (years as number) * 12 + (months as number);
+  const teaching = (teachingYears as number) * 12 + (teachingMonths as number);
+  return school > teaching ? message(SCHOOL_SENIORITY_TOO_HIGH) : null;
+};
+
 /** Puntaje 0–999,99 con hasta 2 decimales; acepta coma o punto. */
 export const scoreValidator: ValidatorFn = (control) => {
   const value = String(control.value ?? '').trim();

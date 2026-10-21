@@ -305,6 +305,13 @@ export class Detail {
     if (prevMonths !== nextMonths && typeof prevMonths === 'number' && typeof nextMonths === 'number') {
       changes.push(`antigüedad ${formatSeniorityShort(prevMonths)} → ${formatSeniorityShort(nextMonths)}`);
     }
+    // Los eventos anteriores a este dato no lo traen: se toma como "sin dato".
+    const prevSchool = typeof before['schoolSeniorityMonths'] === 'number' ? before['schoolSeniorityMonths'] : null;
+    const nextSchool = typeof after['schoolSeniorityMonths'] === 'number' ? after['schoolSeniorityMonths'] : null;
+    if (prevSchool !== nextSchool) {
+      const label = (months: number | null) => (months === null ? 'sin dato' : formatSeniorityShort(months));
+      changes.push(`antigüedad en la escuela ${label(prevSchool)} → ${label(nextSchool)}`);
+    }
     return changes;
   }
 

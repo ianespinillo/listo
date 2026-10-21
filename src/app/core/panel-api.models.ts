@@ -26,6 +26,8 @@ export interface ListingRow {
   dni: string;
   employmentStatus: EmploymentStatus;
   seniorityMonths: number;
+  /** Meses en la escuela; null si no la declaró (externos e inscripciones anteriores). */
+  schoolSeniorityMonths: number | null;
   score: string;
   shifts: Shift[];
   status: ApplicationStatus;
@@ -84,6 +86,7 @@ export interface ApplicantDetail {
   phone: string;
   employmentStatus: EmploymentStatus;
   seniorityMonths: number;
+  schoolSeniorityMonths: number | null;
   shifts: Shift[];
   deactivated: boolean;
   cycle: { id: number; year: number };

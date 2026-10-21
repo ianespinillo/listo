@@ -17,6 +17,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 import {
   EmploymentStatus,
@@ -34,6 +35,7 @@ import {
   SHIFT_OPTIONS,
   formatDayMonth,
   formatScore,
+  formatSeniority,
 } from './registration.labels';
 import {
   atLeastOneShift,
@@ -43,6 +45,7 @@ import {
   noDuplicatePositions,
   phoneValidator,
   requiredText,
+  schoolYearsValidator,
   scoreValidator,
 } from './registration.validators';
 
@@ -66,6 +69,8 @@ const REQUIRED = {
   employmentStatus: 'Elegí tu situación de revista.',
   years: 'Ingresá los años (si no tenés, poné 0).',
   months: 'Ingresá los meses (si no tenés, poné 0).',
+  schoolYears: 'Ingresá los años en esta escuela (si no tenés, poné 0).',
+  schoolMonths: 'Ingresá los meses en esta escuela (si no tenés, poné 0).',
   position: 'Elegí una materia o cargo.',
   score: 'Ingresá el puntaje.',
   declaration: 'Tenés que confirmar la declaración para enviar.',
@@ -122,10 +127,40 @@ export class Registration implements OnInit {
     employmentStatus: this.fb.control<EmploymentStatus | ''>('', Validators.required),
     seniorityYears: this.fb.control<number | null>(null, integerBetween(0, 60)),
     seniorityMonths: this.fb.control<number | null>(null, integerBetween(0, 11)),
+    // Solo se pide (y se valida y envía) a quien trabaja en la escuela; ver el constructor.
+    schoolYears: this.fb.control<number | null>({ value: null, disabled: true }, schoolYearsValidator),
+    schoolMonths: this.fb.control<number | null>({ value: null, disabled: true }, integerBetween(0, 11)),
     shifts: this.fb.group({ MANANA: false, TARDE: false, VESPERTINO: false }, { validators: atLeastOneShift }),
     applications: this.fb.array([this.newApplication()], { validators: noDuplicatePositions }),
     declaration: [false, Validators.requiredTrue],
   });
+
+  /** La antigüedad en la escuela se pide a titulares, provisionales y suplentes; no a externos. */
+  protected readonly asksSchoolSeniority = signal(false);
+
+  constructor() {
+    const { employmentStatus, seniorityYears, seniorityMonths, schoolYears, schoolMonths } = this.form.controls;
+
+    // Habilitar/deshabilitar saca el bloque de la validación y del envío cuando es externo.
+    employmentStatus.valueChanges.pipe(takeUntilDestroyed()).subscribe((status) => {
+      const asks = status === 'TITULAR' || status === 'PROVISIONAL' || status === 'SUPLENTE';
+      this.asksSchoolSeniority.set(asks);
+      if (asks) {
+        schoolYears.enable({ emitEvent: false });
+        schoolMonths.enable({ emitEvent: false });
+      } else {
+        schoolYears.disable({ emitEvent: false });
+        schoolMonths.disable({ emitEvent: false });
+      }
+    });
+
+    // La comparación con la antigüedad docente depende de otros tres controles.
+    for (const control of [seniorityYears, seniorityMonths, schoolMonths]) {
+      control.valueChanges
+        .pipe(takeUntilDestroyed())
+        .subscribe(() => schoolYears.updateValueAndValidity({ emitEvent: false }));
+    }
+  }
 
   protected get applications() {
     return this.form.controls.applications;
@@ -269,6 +304,9 @@ export class Registration implements OnInit {
       phone: value.phone.trim(),
       employmentStatus: value.employmentStatus as EmploymentStatus,
       seniority: { years: value.seniorityYears ?? 0, months: value.seniorityMonths ?? 0 },
+      ...(this.asksSchoolSeniority()
+        ? { schoolSeniority: { years: value.schoolYears ?? 0, months: value.schoolMonths ?? 0 } }
+        : {}),
       shifts: SHIFT_OPTIONS.map((s) => s.value).filter((shift: Shift) => value.shifts[shift]),
       applications: value.applications.map((row) => ({
         positionId: row.positionId as number,
@@ -313,6 +351,11 @@ export class Registration implements OnInit {
         return controls.seniorityYears;
       case 'seniority.months':
         return controls.seniorityMonths;
+      case 'schoolSeniority':
+      case 'schoolSeniority.years':
+        return controls.schoolYears;
+      case 'schoolSeniority.months':
+        return controls.schoolMonths;
       case 'applications':
         return controls.applications;
     }
@@ -339,6 +382,8 @@ export class Registration implements OnInit {
       [c.employmentStatus.invalid, 'f-employment-TITULAR'],
       [c.seniorityYears.invalid, 'f-seniorityYears'],
       [c.seniorityMonths.invalid, 'f-seniorityMonths'],
+      [c.schoolYears.invalid, 'f-schoolYears'],
+      [c.schoolMonths.invalid, 'f-schoolMonths'],
       [c.shifts.invalid, 'f-shift-MANANA'],
     ];
     this.applications.controls.forEach((row, index) => {
@@ -392,6 +437,7 @@ export class Registration implements OnInit {
 
   protected dayMonth = formatDayMonth;
   protected score = formatScore;
+  protected schoolSeniority = formatSeniority;
   protected employmentLabel(status: EmploymentStatus): string {
     return EMPLOYMENT_LABELS[status];
   }

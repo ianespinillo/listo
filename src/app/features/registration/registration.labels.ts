@@ -37,3 +37,14 @@ export function formatDayMonth(isoDate: string): string {
 export function formatScore(score: string): string {
   return score.replace('.', ',');
 }
+
+/** 110 meses -> "9 años y 2 meses" (se omite la parte en cero). */
+export function formatSeniority(totalMonths: number): string {
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  const parts = [
+    years > 0 ? `${years} ${years === 1 ? 'año' : 'años'}` : '',
+    months > 0 ? `${months} ${months === 1 ? 'mes' : 'meses'}` : '',
+  ].filter(Boolean);
+  return parts.length ? parts.join(' y ') : '0 años';
+}
