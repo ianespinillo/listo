@@ -1,6 +1,6 @@
 # Etapa 0: Proyecto base
 
-**Objetivo**: proyecto Angular 22 con SSR en la carpeta actual, con Express + Prisma 7 listos y un `GET /api/salud`.
+**Objetivo**: proyecto Angular 22 con SSR en la carpeta actual, con Express + Prisma 7 listos y un `GET /api/health`.
 **Fuente**: `docs/plan.md` § Etapa 0.
 **TDD**: desactivado (no hay configuración de proyecto). Chequeos funcionales comunes.
 **Ruta**: delegated direct (un writer; toca 2+ archivos no triviales).
@@ -12,7 +12,7 @@
 - pnpm como gestor de paquetes. Endpoints y nombres de archivos en inglés; UI en español (pedido del usuario, ya reflejado en `CLAUDE.md` y `docs/`).
 - Prisma fijado en 7.10.1 (el tag `latest` de npm apunta a 8.0 rc).
 - `src/app` nunca importa de `src/server`.
-- Sin commits: `listo` no tiene repo propio (el repo raíz es la carpeta `GitHub/`). Pendiente de decisión del usuario.
+- `listo` es un repo git propio (antes vivía dentro del repo de la carpeta `GitHub/`).
 
 ## Tareas
 
@@ -38,12 +38,14 @@
 - `vitest.config.ts` → `.mts` (warning de ESM en CJS).
 - `angular.json`: `security.allowedHosts: ["localhost", "127.0.0.1"]` (Angular 22 bloqueaba el header Host). Agregar el dominio real al desplegar.
 - Sin verificar: `docker compose up -d`, `prisma migrate dev --name inicial` y `{ ok: true }` (Docker apagado).
-- Review nativo: preflight inválido porque el repo raíz es la carpeta `GitHub/` (contiene otros repos). Sin commits.
+- Repo propio creado con `git init -b main`. Base: `d2af2bc` (docs) en `main`.
+- Commit de la etapa: `a4818b7` en `feat/etapa-0-proyecto-base` (T1–T3).
+- Review nativo: riesgo medio (30 archivos, 6130 líneas, sobre todo `pnpm-lock.yaml`). El usuario lo salteó para este candidato (`declined_this_candidate`). Verificación: self-check del writer + spot check del coordinador.
 
 ## Siguiente paso
 
-Decidir el repo de `listo`; después, el usuario prueba con Docker y se pasa a la Etapa 1.
+El usuario prueba con Docker (`docker compose up -d`, `prisma migrate dev --name inicial`, `/api/health`). Con el OK, Etapa 1.
 
 ## Mirror Engram
 
-Pendiente: Engram detecta el proyecto como `github` (raíz git de la carpeta padre). Se sincroniza cuando se resuelva el repo.
+Topic `odd/etapa-0-proyecto-base/tasks` en el proyecto `listo`.
