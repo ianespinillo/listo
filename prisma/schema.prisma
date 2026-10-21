@@ -3,8 +3,9 @@
 // Modelos y campos en español (dominio); tablas, columnas y tipos de la base en inglés (@map / @@map).
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/server/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/server/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -55,11 +56,12 @@ model Ciclo {
   anio             Int          @unique @map("year")
   inscripcionDesde DateTime     @map("registration_from") @db.Date
   inscripcionHasta DateTime     @map("registration_until") @db.Date
-  // Un solo ciclo activo: índice único parcial en migración manual (ver docs/plan.md, Etapa 1)
+  // Un solo ciclo activo: índice único parcial cycle_single_active (ver @@unique abajo)
   activo           Boolean      @default(false) @map("active")
   creadoEn         DateTime     @default(now()) @map("created_at")
   postulantes      Postulante[]
 
+  @@unique([activo], map: "cycle_single_active", where: { activo: true })
   @@map("cycle")
 }
 
