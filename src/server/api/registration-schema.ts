@@ -38,6 +38,12 @@ const score = z.union([z.string(), z.number()], { error: 'Ingresá el puntaje.' 
   return result.value;
 });
 
+/** Email normalizado (trim + minúsculas) y validado. Lo usa también el panel. */
+export const emailSchema = z
+  .string({ error: REQUIRED })
+  .transform(normalizeEmail)
+  .pipe(z.string().max(254, 'El email es demasiado largo.').pipe(z.email('Ingresá un email válido.')));
+
 export const registrationSchema = z.object({
   dni: z
     .string({ error: REQUIRED })
@@ -45,10 +51,7 @@ export const registrationSchema = z.object({
     .pipe(z.string().regex(/^\d{7,8}$/, 'El DNI debe tener 7 u 8 dígitos.')),
   lastName: requiredText(1, 80, 'Ingresá tu apellido.', 'El apellido puede tener hasta 80 caracteres.'),
   firstName: requiredText(1, 80, 'Ingresá tu nombre.', 'El nombre puede tener hasta 80 caracteres.'),
-  email: z
-    .string({ error: REQUIRED })
-    .transform(normalizeEmail)
-    .pipe(z.string().max(254, 'El email es demasiado largo.').pipe(z.email('Ingresá un email válido.'))),
+  email: emailSchema,
   phone: requiredText(6, 30, 'El teléfono debe tener al menos 6 caracteres.', 'El teléfono puede tener hasta 30 caracteres.'),
   employmentStatus: z.enum(EMPLOYMENT_STATUSES, { error: 'Elegí tu situación de revista.' }),
   seniority: z.object(

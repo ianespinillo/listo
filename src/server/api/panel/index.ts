@@ -1,5 +1,6 @@
 import cookieParser from 'cookie-parser';
 import { Router } from 'express';
+import { createApplicantsRouter } from './applicants';
 import { requireJsonContentType } from './http';
 import { createListingRouter } from './listing';
 import { requireSession } from './require-session';
@@ -21,6 +22,7 @@ export function createPanelRouter(options: PanelRouterOptions): Router {
   router.use(requireSession(options.now));
   router.get('/session', getSession);
   router.use(createListingRouter(options));
+  router.use(createApplicantsRouter());
 
   return router;
 }
