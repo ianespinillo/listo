@@ -19,6 +19,7 @@ import { PositionType } from '../../../core/public-api.models';
 import { formatIsoDate, todayInBuenosAires } from '../../../core/format';
 import { Alert } from '../../../shared/ui/alert/alert';
 import { Badge } from '../../../shared/ui/badge/badge';
+import { Dialog } from '../../../shared/ui/dialog/dialog';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Field } from '../../../shared/ui/field/field';
 import { FieldControl } from '../../../shared/ui/field/field-control';
@@ -36,6 +37,7 @@ const REQUIRED_DATE = 'Ingresá la fecha.';
     ReactiveFormsModule,
     Alert,
     Badge,
+    Dialog,
     EmptyState,
     Field,
     FieldControl,
@@ -55,8 +57,6 @@ export class Settings implements OnInit {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly archiveDialog = viewChild.required<ElementRef<HTMLDialogElement>>('archiveDialog');
-  private readonly positionDialog = viewChild.required<ElementRef<HTMLDialogElement>>('positionDialog');
   private readonly linkInput = viewChild.required<ElementRef<HTMLInputElement>>('linkInput');
 
   protected readonly state = signal<LoadStatus>('loading');
@@ -95,6 +95,11 @@ export class Settings implements OnInit {
 
   // ---- Archivar ciclo y abrir el siguiente ----
 
+  protected readonly archiveOpen = signal(false);
+  protected readonly archiveTitle = computed(() => {
+    const active = this.activeCycle();
+    return active ? `Archivar el ciclo ${active.year} y abrir el ${this.nextYear()}` : 'Abrir un ciclo';
+  });
   protected readonly archiveForm = this.fb.group({
     year: [0, [Validators.required, Validators.min(2000), Validators.max(2100)]],
     from: ['', Validators.required],
@@ -105,6 +110,7 @@ export class Settings implements OnInit {
 
   // ---- Puestos ----
 
+  protected readonly positionOpen = signal(false);
   protected readonly positionForm = this.fb.group({
     name: ['', Validators.required],
     type: ['ASIGNATURA' as PositionType, Validators.required],
@@ -202,11 +208,11 @@ export class Settings implements OnInit {
   protected openArchive(): void {
     this.archiveForm.reset({ year: this.nextYear(), from: '', until: '' });
     this.archiveErrors.set({});
-    this.archiveDialog().nativeElement.showModal();
+    this.archiveOpen.set(true);
   }
 
   protected closeArchive(): void {
-    this.archiveDialog().nativeElement.close();
+    this.archiveOpen.set(false);
   }
 
   protected async createCycle(): Promise<void> {
@@ -271,11 +277,11 @@ export class Settings implements OnInit {
       type: position?.type ?? 'ASIGNATURA',
       active: position?.active ?? true,
     });
-    this.positionDialog().nativeElement.showModal();
+    this.positionOpen.set(true);
   }
 
   protected closePosition(): void {
-    this.positionDialog().nativeElement.close();
+    this.positionOpen.set(false);
   }
 
   protected async savePosition(): Promise<void> {

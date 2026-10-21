@@ -2,11 +2,9 @@ import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   computed,
   inject,
   signal,
-  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -24,6 +22,7 @@ import {
 } from '../../../core/format';
 import { EMAIL_PATTERN } from '../../../core/forms';
 import { Alert } from '../../../shared/ui/alert/alert';
+import { Dialog } from '../../../shared/ui/dialog/dialog';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Field } from '../../../shared/ui/field/field';
 import { FieldControl } from '../../../shared/ui/field/field-control';
@@ -41,6 +40,7 @@ function asRecord(value: unknown): Record<string, unknown> {
     ReactiveFormsModule,
     RouterLink,
     Alert,
+    Dialog,
     EmptyState,
     Field,
     FieldControl,
@@ -59,8 +59,6 @@ export class Detail {
   private readonly document = inject(DOCUMENT);
   private readonly fb = inject(NonNullableFormBuilder);
 
-  private readonly emailDialog = viewChild.required<ElementRef<HTMLDialogElement>>('emailDialog');
-  private readonly deactivateDialog = viewChild.required<ElementRef<HTMLDialogElement>>('deactivateDialog');
 
   protected readonly state = signal<LoadStatus>('loading');
   protected readonly errorMessage = signal('');
@@ -72,6 +70,8 @@ export class Detail {
   protected readonly verifying = signal<number | null>(null);
   protected readonly acting = signal(false);
 
+  protected readonly emailOpen = signal(false);
+  protected readonly deactivateOpen = signal(false);
   protected readonly emailControl = this.fb.control('', [Validators.required, Validators.pattern(EMAIL_PATTERN)]);
   protected readonly emailError = signal('');
   protected readonly emailSending = signal(false);
@@ -199,12 +199,11 @@ export class Detail {
     this.emailControl.setValue(this.applicant()?.email ?? '');
     this.emailControl.markAsUntouched();
     this.emailError.set('');
-    this.emailDialog().nativeElement.showModal();
-    this.document.getElementById('d-email')?.focus();
+    this.emailOpen.set(true);
   }
 
   protected closeEmail(): void {
-    this.emailDialog().nativeElement.close();
+    this.emailOpen.set(false);
   }
 
   protected async saveEmail(): Promise<void> {
@@ -240,11 +239,11 @@ export class Detail {
 
   protected openDeactivate(): void {
     this.deactivateError.set('');
-    this.deactivateDialog().nativeElement.showModal();
+    this.deactivateOpen.set(true);
   }
 
   protected closeDeactivate(): void {
-    this.deactivateDialog().nativeElement.close();
+    this.deactivateOpen.set(false);
   }
 
   protected async deactivate(): Promise<void> {

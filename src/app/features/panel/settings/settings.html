@@ -164,15 +164,8 @@
   }
 </app-load-state>
 
-<dialog #archiveDialog class="dialog" aria-labelledby="a-title" aria-describedby="a-text">
-  <form class="dialog-body" [formGroup]="archiveForm" (submit)="$event.preventDefault(); createCycle()" novalidate>
-    <h2 class="p-h2" id="a-title">
-      @if (activeCycle(); as cycle) {
-        Archivar el ciclo {{ cycle.year }} y abrir el {{ nextYear() }}
-      } @else {
-        Abrir un ciclo
-      }
-    </h2>
+<app-dialog [(open)]="archiveOpen" [title]="archiveTitle()" describedBy="a-text">
+  <form class="dialog-form" [formGroup]="archiveForm" (submit)="$event.preventDefault(); createCycle()" novalidate>
     <p id="a-text">
       @if (activeCycle(); as cycle) {
         El ciclo {{ cycle.year }} queda archivado y ya no se puede editar. El nuevo pasa a ser el activo: los
@@ -218,11 +211,10 @@
       </button>
     </div>
   </form>
-</dialog>
+</app-dialog>
 
-<dialog #positionDialog class="dialog" aria-labelledby="p-title">
-  <form class="dialog-body" [formGroup]="positionForm" (submit)="$event.preventDefault(); savePosition()" novalidate>
-    <h2 class="p-h2" id="p-title">{{ editingPosition() ? 'Editar puesto' : 'Agregar puesto' }}</h2>
+<app-dialog [(open)]="positionOpen" [title]="editingPosition() ? 'Editar puesto' : 'Agregar puesto'">
+  <form class="dialog-form" [formGroup]="positionForm" (submit)="$event.preventDefault(); savePosition()" novalidate>
     @if (positionErrors().general) {
       <app-alert>{{ positionErrors().general }}</app-alert>
     }
@@ -265,4 +257,4 @@
       </button>
     </div>
   </form>
-</dialog>
+</app-dialog>

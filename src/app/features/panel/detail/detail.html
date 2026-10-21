@@ -189,9 +189,8 @@
   }
 </app-load-state>
 
-<dialog #emailDialog class="dialog" aria-labelledby="d-email-title">
-  <form class="dialog-body" (submit)="$event.preventDefault(); saveEmail()" novalidate>
-    <h2 class="p-h2" id="d-email-title">Editar email</h2>
+<app-dialog [(open)]="emailOpen" title="Editar email">
+  <form class="dialog-form" (submit)="$event.preventDefault(); saveEmail()" novalidate>
     <p class="p-sub">Usalo cuando el docente cambió de email y no puede reemplazar su inscripción.</p>
     <app-field controlId="d-email" label="Email del docente" [error]="emailError()" errorRole="alert">
       <input appFieldControl class="input" type="email" autocomplete="off" [formControl]="emailControl" />
@@ -203,11 +202,10 @@
       </button>
     </div>
   </form>
-</dialog>
+</app-dialog>
 
-<dialog #deactivateDialog class="dialog" aria-labelledby="d-baja-title" aria-describedby="d-baja-text">
-  <div class="dialog-body">
-    <h2 class="p-h2" id="d-baja-title">Dar de baja a {{ fullName() }}</h2>
+<app-dialog [(open)]="deactivateOpen" [title]="'Dar de baja a ' + fullName()" describedBy="d-baja-text">
+  <div class="dialog-form">
     <p id="d-baja-text">
       Va a dejar de aparecer en el listado de todas las materias. No se borra nada: podés reactivarlo
       cuando quieras.
@@ -222,4 +220,4 @@
       </button>
     </div>
   </div>
-</dialog>
+</app-dialog>

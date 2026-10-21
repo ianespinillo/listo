@@ -376,3 +376,14 @@ select {
   gap: 16px;
   padding: 22px 20px;
 }
+
+.dialog-title {
+  font-size: 18px;
+}
+
+/* Contenido proyectado en el diálogo: apila sus partes igual que el cuerpo. */
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
