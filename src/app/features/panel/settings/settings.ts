@@ -7,6 +7,7 @@ import {
   computed,
   inject,
   signal,
+  DestroyRef,
   viewChild,
 } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -20,6 +21,7 @@ import { formatIsoDate, todayInBuenosAires } from '../panel.format';
 type ViewState = 'loading' | 'ready' | 'error';
 
 const RANGE_MESSAGE = 'La fecha de cierre no puede ser anterior a la de apertura.';
+const STALE_MESSAGE = 'Se guardó, pero no pudimos actualizar la lista. Recargá la página.';
 const REQUIRED_DATE = 'Ingresá la fecha.';
 
 @Component({
@@ -35,6 +37,7 @@ export class Settings implements OnInit {
   private readonly ctx = inject(PanelContext);
   private readonly document = inject(DOCUMENT);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly archiveDialog = viewChild.required<ElementRef<HTMLDialogElement>>('archiveDialog');
   private readonly positionDialog = viewChild.required<ElementRef<HTMLDialogElement>>('positionDialog');
@@ -45,6 +48,8 @@ export class Settings implements OnInit {
   protected readonly cycles = signal<CycleItem[]>([]);
   protected readonly positions = signal<PanelPosition[]>([]);
   protected readonly announcement = signal('');
+  /** Aviso no bloqueante: se guardó, pero falló la recarga posterior. */
+  protected readonly staleNotice = signal('');
 
   protected readonly activeCycle = computed(() => this.cycles().find((c) => c.active) ?? null);
   protected readonly archivedCycles = computed(() => this.cycles().filter((c) => !c.active));
@@ -92,6 +97,10 @@ export class Settings implements OnInit {
   protected readonly editingPosition = signal<PanelPosition | null>(null);
   protected readonly positionErrors = signal<{ name?: string; type?: string; general?: string }>({});
   protected readonly positionSaving = signal(false);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => clearTimeout(this.copyTimer));
+  }
 
   ngOnInit(): void {
     void this.load();
@@ -200,20 +209,11 @@ export class Settings implements OnInit {
 
     this.archiveSaving.set(true);
     const previous = this.activeCycle();
+    let created: CycleItem;
     try {
-      const created = await firstValueFrom(
+      created = await firstValueFrom(
         this.api.createCycle({ year, registrationFrom: from, registrationUntil: until }),
       );
-      this.cycles.set(await firstValueFrom(this.api.getCycles()));
-      this.resetDates();
-      this.datesSaved.set(false);
-      this.closeArchive();
-      this.announcement.set(
-        previous
-          ? `Ciclo ${created.year} abierto. El ciclo ${previous.year} quedó archivado.`
-          : `Ciclo ${created.year} abierto.`,
-      );
-      void this.ctx.refresh();
     } catch (err) {
       const error = parseApiError(err);
       const fieldErrors = {
@@ -223,9 +223,26 @@ export class Settings implements OnInit {
       };
       const hasField = !!(fieldErrors.year || fieldErrors.from || fieldErrors.until);
       this.archiveErrors.set({ ...fieldErrors, general: hasField ? undefined : error.message });
-    } finally {
       this.archiveSaving.set(false);
+      return;
     }
+
+    // El servidor ya guardó: se cierra el diálogo y la recarga va aparte.
+    this.archiveSaving.set(false);
+    this.closeArchive();
+    this.datesSaved.set(false);
+    this.announcement.set(
+      previous
+        ? `Ciclo ${created.year} abierto. El ciclo ${previous.year} quedó archivado.`
+        : `Ciclo ${created.year} abierto.`,
+    );
+    try {
+      this.cycles.set(await firstValueFrom(this.api.getCycles()));
+      this.resetDates();
+    } catch {
+      this.staleNotice.set(STALE_MESSAGE);
+    }
+    void this.ctx.refresh();
   }
 
   // ---- Puestos ----
@@ -258,21 +275,29 @@ export class Settings implements OnInit {
 
     this.positionSaving.set(true);
     const editing = this.editingPosition();
+    let saved: PanelPosition;
     try {
-      const saved = editing
+      saved = editing
         ? await firstValueFrom(this.api.updatePosition(editing.id, { name: trimmed, type, active }))
         : await firstValueFrom(this.api.createPosition({ name: trimmed, type }));
-      this.positions.set(await firstValueFrom(this.api.getPositions()));
-      this.closePosition();
-      this.announcement.set(editing ? `Puesto ${saved.name} guardado.` : `Puesto ${saved.name} agregado.`);
     } catch (err) {
       const error = parseApiError(err);
       const name = error.fields['name'] ?? (error.code === 'DUPLICATE_POSITION' ? error.message : undefined);
       const type = error.fields['type'];
       this.positionErrors.set({ name, type, general: name || type ? undefined : error.message });
       if (name) this.document.getElementById('p-nombre')?.focus();
-    } finally {
       this.positionSaving.set(false);
+      return;
+    }
+
+    // El servidor ya guardó: se cierra el diálogo y la recarga va aparte.
+    this.positionSaving.set(false);
+    this.closePosition();
+    this.announcement.set(editing ? `Puesto ${saved.name} guardado.` : `Puesto ${saved.name} agregado.`);
+    try {
+      this.positions.set(await firstValueFrom(this.api.getPositions()));
+    } catch {
+      this.staleNotice.set(STALE_MESSAGE);
     }
   }
 

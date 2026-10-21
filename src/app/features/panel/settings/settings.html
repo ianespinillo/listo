@@ -2,6 +2,10 @@
 
 <p class="visually-hidden" role="status" aria-live="polite">{{ announcement() }}</p>
 
+@if (staleNotice()) {
+  <p class="notice notice-warn" role="status">{{ staleNotice() }}</p>
+}
+
 @switch (state()) {
   @case ('loading') {
     <p class="p-state" role="status">Cargando…</p>

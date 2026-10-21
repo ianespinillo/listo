@@ -40,6 +40,9 @@
       <button type="button" class="p-logout" [disabled]="loggingOut()" (click)="logout()">Salir</button>
     </div>
   </div>
+  @if (logoutError()) {
+    <p class="alert" role="alert">{{ logoutError() }}</p>
+  }
 </header>
 
 <main #main id="contenido" class="p-main" tabindex="-1">

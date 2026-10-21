@@ -11,7 +11,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { distinctUntilChanged, firstValueFrom, map } from 'rxjs';
+import { catchError, distinctUntilChanged, firstValueFrom, map, of, switchMap } from 'rxjs';
 import { ApplicantDetail, ApplicationView, HistoryEvent } from '../../../core/panel-api.models';
 import { PanelApiService, parseApiError } from '../../../core/panel-api.service';
 import {
@@ -107,16 +107,30 @@ export class Detail {
       .pipe(
         map((params) => params.get('id')),
         distinctUntilChanged(),
+        switchMap((raw) => {
+          const id = raw && /^\d{1,10}$/.test(raw) ? Number(raw) : null;
+          this.id.set(id);
+          if (id === null) return of({ notFound: true as const });
+          this.state.set('loading');
+          // switchMap cancela el pedido anterior: una respuesta vieja no pisa la del id nuevo.
+          return this.api.getApplicant(id).pipe(
+            map((applicant) => ({ applicant })),
+            catchError((err: unknown) => of({ error: parseApiError(err) })),
+          );
+        }),
         takeUntilDestroyed(),
       )
-      .subscribe((raw) => {
-        const id = raw && /^\d{1,10}$/.test(raw) ? Number(raw) : null;
-        this.id.set(id);
-        if (id === null) {
+      .subscribe((result) => {
+        if ('notFound' in result) {
+          this.state.set('notFound');
+        } else if ('applicant' in result) {
+          this.applicant.set(result.applicant);
+          this.state.set('ready');
+        } else if (result.error.status === 404) {
           this.state.set('notFound');
         } else {
-          this.state.set('loading');
-          void this.load();
+          this.errorMessage.set(result.error.message);
+          this.state.set('error');
         }
       });
   }
@@ -127,9 +141,12 @@ export class Detail {
     if (id === null) return;
     if (!quiet) this.state.set('loading');
     try {
-      this.applicant.set(await firstValueFrom(this.api.getApplicant(id)));
+      const applicant = await firstValueFrom(this.api.getApplicant(id));
+      if (this.id() !== id) return; // cambió el :id mientras tanto
+      this.applicant.set(applicant);
       this.state.set('ready');
     } catch (err) {
+      if (this.id() !== id) return;
       const error = parseApiError(err);
       if (quiet && this.applicant()) return;
       if (error.status === 404) {

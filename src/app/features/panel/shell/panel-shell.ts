@@ -9,6 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { firstValueFrom, filter, map } from 'rxjs';
@@ -36,6 +37,7 @@ export class PanelShell implements OnInit {
 
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
   protected readonly loggingOut = signal(false);
+  protected readonly logoutError = signal('');
 
   private readonly url = toSignal(
     this.router.events.pipe(
@@ -61,10 +63,17 @@ export class PanelShell implements OnInit {
   protected async logout(): Promise<void> {
     if (this.loggingOut()) return;
     this.loggingOut.set(true);
+    this.logoutError.set('');
     try {
       await firstValueFrom(this.api.logout());
-    } catch {
-      // Aunque falle, se sale: el servidor de todos modos exige la sesión en cada pedido.
+    } catch (err) {
+      // Un 401 significa que ya no hay sesión: se sale igual. Con cualquier otro fallo la sesión
+      // puede seguir viva (y el guestGuard rebotaría a /panel), así que se avisa y no se navega.
+      if (!(err instanceof HttpErrorResponse && err.status === 401)) {
+        this.logoutError.set('No pudimos cerrar la sesión. Revisá tu conexión e intentá de nuevo.');
+        this.loggingOut.set(false);
+        return;
+      }
     }
     this.loggingOut.set(false);
     await this.router.navigateByUrl('/panel/ingresar');

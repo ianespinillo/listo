@@ -4,9 +4,14 @@ import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { catchError, map, of } from 'rxjs';
 import { PanelApiService } from './panel-api.service';
 
-/** Solo se vuelve a rutas internas del panel (evita redirecciones abiertas). */
+/**
+ * Solo se vuelve a rutas internas del panel (evita redirecciones abiertas): `/panel`, `/panel/...`
+ * o `/panel?...`. Se rechaza todo lo que tenga `//`, `\` o un esquema (`algo:`).
+ */
 export function safeReturnUrl(url: string | null | undefined): string | null {
-  if (!url || !url.startsWith('/panel') || url.startsWith('//')) return null;
+  if (!url) return null;
+  const inPanel = url === '/panel' || url.startsWith('/panel/') || url.startsWith('/panel?');
+  if (!inPanel || url.includes('//') || url.includes('\\') || /^[a-z][a-z0-9+.-]*:/i.test(url)) return null;
   if (url === '/panel' || url.startsWith('/panel/ingresar')) return null;
   return url;
 }

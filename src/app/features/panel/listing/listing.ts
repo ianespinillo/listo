@@ -2,7 +2,18 @@ import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
-import { catchError, distinctUntilChanged, firstValueFrom, map, of, switchMap, tap } from 'rxjs';
+import {
+  Subject,
+  catchError,
+  combineLatest,
+  distinctUntilChanged,
+  firstValueFrom,
+  map,
+  of,
+  startWith,
+  switchMap,
+  tap,
+} from 'rxjs';
 import {
   ListingFilters,
   ListingGroup,
@@ -73,6 +84,8 @@ export class Listing {
   protected readonly ctx = inject(PanelContext);
 
   protected readonly shiftFilters = SHIFT_FILTERS;
+  /** Cada emisión repite el pedido con los filtros vigentes; pasa por el mismo `switchMap`. */
+  private readonly retry$ = new Subject<void>();
 
   protected readonly state = signal<ViewState>('loading');
   protected readonly errorMessage = signal('');
@@ -113,10 +126,12 @@ export class Listing {
   constructor() {
     void this.loadPositions();
 
-    this.route.queryParams
+    combineLatest([
+      this.route.queryParams.pipe(map(parseFilters), distinctUntilChanged(sameFilters)),
+      this.retry$.pipe(startWith(undefined)),
+    ])
       .pipe(
-        map(parseFilters),
-        distinctUntilChanged(sameFilters),
+        map(([filters]) => filters),
         tap(() => this.busy.set(true)),
         switchMap((filters) =>
           this.api.getListing(filters).pipe(
@@ -151,19 +166,7 @@ export class Listing {
   protected retry(): void {
     // Un cambio de URL vuelve a disparar el pedido; con la misma URL se pide a mano.
     this.state.set('loading');
-    this.busy.set(true);
-    this.api.getListing(this.filters()).subscribe({
-      next: (data) => {
-        this.busy.set(false);
-        this.data.set(data);
-        this.state.set('ready');
-      },
-      error: (err: unknown) => {
-        this.busy.set(false);
-        this.errorMessage.set(parseApiError(err).message);
-        this.state.set('error');
-      },
-    });
+    this.retry$.next();
   }
 
   // ---- Filtros ----
