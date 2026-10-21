@@ -1,0 +1,57 @@
+{
+  "name": "listo",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "node dist/listo/server/server.mjs",
+    "build": "ng build",
+    "test": "vitest run --passWithNoTests",
+    "dev": "ng serve",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:seed": "prisma db seed",
+    "create-admin": "tsx scripts/create-admin.ts",
+    "postinstall": "prisma generate"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/platform-server": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "@angular/ssr": "^22.2.3",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.8",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.7.1",
+    "pg": "^8.23.1",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.3",
+    "@angular/cli": "^22.2.3",
+    "@angular/compiler-cli": "^22.2.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.12.0",
+    "@types/pg": "^8.23.1",
+    "prettier": "^3.8.1",
+    "prisma": "7.10.1",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.2",
+    "vitest": "^5.0.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "prisma",
+      "@prisma/engines"
+    ]
+  }
+}
