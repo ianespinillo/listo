@@ -22,6 +22,7 @@
 | Teléfono | texto | obligatorio, 6–30 caracteres |
 | Situación de revista **en esta escuela** | radio | `TITULAR` · `PROVISIONAL` · `SUPLENTE` · `EXTERNO` ("No trabajo en esta escuela") |
 | Antigüedad docente | años + meses | enteros; años 0–60, meses 0–11. Se guarda como total de meses |
+| Antigüedad en esta escuela | años + meses | **solo se pide si la situación es `TITULAR`, `PROVISIONAL` o `SUPLENTE`**; con `EXTERNO` el bloque se oculta y no se envía. Obligatoria cuando se pide. Mismos rangos que la antigüedad docente (años 0–60, meses 0–11) y no puede superarla: "No puede ser mayor que tu antigüedad docente." Se guarda como total de meses (`null` para externos) |
 | Turnos disponibles | checkboxes | al menos uno: `MANANA` · `TARDE` · `VESPERTINO` |
 | Materias y puntajes | lista dinámica | ver abajo |
 | Declaración | checkbox | obligatorio: "Declaro que los datos son correctos…" |
@@ -57,8 +58,8 @@
   - "Solo verificados": checkbox.
 - **Resumen** arriba: total de postulantes, verificados y con puntaje modificado.
 - **Tres secciones**, una por grupo del decreto. Cada una tiene un título y una línea que explica su regla de orden.
-- **Columnas**: Orden (número global de 1 a N, continúa entre grupos), Docente (apellido, nombre y DNI), Situación, Antigüedad ("9 a 2 m"), Puntaje, Turnos (M/T/V), Estado, Teléfono y un botón "Ver".
-- En cada grupo se resalta la columna que define el orden: antigüedad en el grupo 1, puntaje en los grupos 2 y 3.
+- **Columnas**: Orden (número global de 1 a N, continúa entre grupos), Docente (apellido, nombre y DNI), Situación, Antig. escuela y Antig. docente (ambas "9 a 2 m"; "—" si no hay dato), Puntaje, Turnos (M/T/V), Estado, Teléfono y un botón "Ver".
+- En cada grupo se resalta la columna que define el orden: antigüedad en la escuela en el grupo 1, puntaje en los grupos 2 y 3.
 - **Estado** de la postulación:
   - Verificado.
   - Sin verificar.
@@ -67,7 +68,7 @@
 - **"Imprimir listado"** usa `window.print()` con una hoja de estilos de impresión que oculta header y filtros.
 
 ### Detalle del postulante (`/panel/postulantes/:id`)
-- Datos personales, situación, antigüedad y turnos.
+- Datos personales, situación, antigüedad docente, antigüedad en la escuela ("—" si no la declaró) y turnos.
 - **Postulaciones**: cada materia con su puntaje, el puntaje anterior si cambió, su estado y el botón "Marcar verificado" o "Quitar verificación".
 - **Historial**: eventos en orden cronológico inverso.
 - Acciones:

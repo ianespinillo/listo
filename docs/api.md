@@ -54,6 +54,7 @@ Rate limit: **10 envíos por hora por IP**. Si se supera: `429 TOO_MANY_REQUESTS
   "phone": "11 5544 0921",
   "employmentStatus": "PROVISIONAL",
   "seniority": { "years": 9, "months": 2 },
+  "schoolSeniority": { "years": 4, "months": 1 },
   "shifts": ["MANANA", "TARDE"],
   "applications": [
     { "positionId": 1, "score": "38,45" },
@@ -72,6 +73,8 @@ Rate limit: **10 envíos por hora por IP**. Si se supera: `429 TOO_MANY_REQUESTS
 | `409 DATA_MISMATCH` | DNI existente con otro email, o dado de baja |
 | `429 TOO_MANY_REQUESTS` | Rate limit |
 
+`schoolSeniority` es obligatorio cuando `employmentStatus` es `TITULAR`, `PROVISIONAL` o `SUPLENTE` (errores en `schoolSeniority.years` / `schoolSeniority.months`), con los mismos rangos que `seniority`, y no puede superar la antigüedad docente (error en `schoolSeniority.years`). Con `EXTERNO` se ignora y se guarda `null`.
+
 Mensaje de `409`: "Ya existe una inscripción con ese DNI y los datos no coinciden. Si cambiaste de
 email, comunicate con la escuela."
 
@@ -79,7 +82,7 @@ email, comunicate con la escuela."
 ```json
 {
   "lastName": "Pereyra", "firstName": "Laura Inés", "dni": "28123456",
-  "employmentStatus": "PROVISIONAL", "shifts": ["MANANA", "TARDE"],
+  "employmentStatus": "PROVISIONAL", "schoolSeniorityMonths": 49, "shifts": ["MANANA", "TARDE"],
   "applications": [ { "position": "Matemática", "score": "38.45" } ],
   "registrationUntil": "2027-02-28"
 }
@@ -123,7 +126,7 @@ Las rutas que modifican datos (`POST`, `PUT`, `PATCH`, `DELETE`) solo aceptan `C
         {
           "order": 1, "applicantId": 12,
           "lastName": "Gómez", "firstName": "Mariana", "dni": "22481903",
-          "employmentStatus": "TITULAR", "seniorityMonths": 256,
+          "employmentStatus": "TITULAR", "seniorityMonths": 256, "schoolSeniorityMonths": 130,
           "score": "44.10", "shifts": ["MANANA", "TARDE"],
           "status": "VERIFIED", "phone": "11 4021 3387"
         }
@@ -160,7 +163,7 @@ Comportamiento:
 | `PUT /api/panel/applicants/:id/applications/:positionId/verification` | `{ "verified": true }` | `200` con la postulación |
 
 Detalle del postulante:
-- Datos: `id`, `dni`, `lastName`, `firstName`, `email`, `phone`, `employmentStatus`, `seniorityMonths`, `shifts`, `deactivated` y `cycle` (`{ id, year }`).
+- Datos: `id`, `dni`, `lastName`, `firstName`, `email`, `phone`, `employmentStatus`, `seniorityMonths`, `schoolSeniorityMonths` (meses o `null`), `shifts`, `deactivated` y `cycle` (`{ id, year }`).
 - `applications[]`, ordenadas por nombre de puesto: `position` (`{ id, name, type, active }`), `score` y `previousScore` (string con 2 decimales o `null`), `status` (igual que en el listado) y `group` y `order`, que son el grupo y el número de orden del postulante en ese puesto, calculados con el mismo orden del listado y **sin filtros**. Valen `null` si el postulante está dado de baja o es de un ciclo que no es el activo.
 - `history[]`, del más nuevo al más viejo: `date` (ISO 8601), `type`, `position` (nombre del puesto o `null`) y `detail` (JSON o `null`).
 - `PUT .../verification` y `PATCH` también devuelven esta forma (la postulación y el postulante, respectivamente). Verificar y quitar la verificación son idempotentes: si el estado no cambia, no se registra un evento nuevo. Lo mismo vale para dar de baja y reactivar.

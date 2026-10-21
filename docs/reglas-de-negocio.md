@@ -8,7 +8,7 @@ Anexo I del Decreto 2485/92, que reglamenta el Estatuto del Docente (Ley 10.579)
 - Se designan docentes "a cargo" para ausencias de **2 días hábiles a 12 días corridos**, o cuando la licencia abarca todas las horas o módulos de ese período.
 - Para **cargos** se usan los listados oficiales y complementarios por establecimiento.
 - Para **módulos y horas cátedra**, la prioridad es:
-  1. **Titulares del establecimiento**, por **antigüedad docente**.
+  1. **Titulares del establecimiento**, por **antigüedad docente** (la escuela decidió ordenarlos por antigüedad en el establecimiento: ver §2).
   2. **Provisionales y suplentes**, en igualdad de condiciones, por **puntaje**. Si empatan, por **antigüedad**.
   3. **Cualquier docente en actividad**, según el **Listado Oficial** o los complementarios del distrito, es decir, por **puntaje**.
 - La directora tiene 48 h para mandar la designación a la Secretaría de Asuntos Docentes. Ese trámite queda **fuera del sistema** por ahora.
@@ -26,13 +26,17 @@ plataforma @abc es otra cosa y no se integra.
 | `PROVISIONAL`, `SUPLENTE` | 2 |
 | `EXTERNO` | 3 |
 
-Claves de orden dentro de cada grupo (`score` = puntaje, `seniority` = antigüedad):
+Claves de orden dentro de cada grupo (`score` = puntaje, `school seniority` = antigüedad en el establecimiento, `teaching seniority` = antigüedad docente):
 
 | Grupo | 1.ª clave | 2.ª clave | Desempate final (*) |
 |---|---|---|---|
-| 1 | antigüedad ↓ | — | apellido, nombre, id |
-| 2 | puntaje ↓ | antigüedad ↓ | apellido, nombre, id |
+| 1 | school seniority ↓ (los `null` al final) | — | apellido, nombre, id |
+| 2 | puntaje ↓ | teaching seniority ↓ | apellido, nombre, id |
 | 3 | puntaje ↓ | — | apellido, nombre, id |
+
+> **Decisión de la escuela (2026-10-21): el grupo 1 se ordena por antigüedad en el establecimiento en lugar de la antigüedad docente que menciona el art. 108 C.**
+> Es una decisión de la escuela y se aparta de la letra del decreto. Aplica solo al grupo 1: el desempate del grupo 2 sigue siendo la antigüedad docente y el grupo 3 no cambia.
+> Los titulares sin dato de antigüedad en el establecimiento (inscripciones anteriores a este campo) quedan al final del grupo 1 (`NULLS LAST`).
 
 (*) El desempate final **no está en el decreto**. Está solo para que el orden sea estable.
 Ver pendientes.
@@ -48,7 +52,7 @@ de `prisma/schema.prisma`. Los modelos y campos de Prisma también están en ing
 WITH base AS (
   SELECT
     a.id, a.last_name, a.first_name, a.dni, a.phone,
-    a.employment_status, a.seniority_months, a.shifts,
+    a.employment_status, a.seniority_months, a.school_seniority_months, a.shifts,
     ap.score, ap.verified, ap.modified, ap.previous_score,
     CASE a.employment_status
       WHEN 'TITULAR'     THEN 1
@@ -69,7 +73,7 @@ SELECT
   ROW_NUMBER() OVER (
     ORDER BY
       group_number,
-      CASE WHEN group_number = 1      THEN seniority_months END DESC NULLS LAST,
+      CASE WHEN group_number = 1      THEN school_seniority_months END DESC NULLS LAST,
       CASE WHEN group_number IN (2,3) THEN score            END DESC NULLS LAST,
       CASE WHEN group_number = 2      THEN seniority_months END DESC NULLS LAST,
       last_name, first_name, id
@@ -87,9 +91,12 @@ Notas:
 ### Tests obligatorios del orden
 
 - Un titular con menos puntaje queda antes que un provisional con más puntaje.
+- Grupo 1: un titular con menos antigüedad docente pero más antigüedad en la escuela queda primero.
+- Grupo 1: un titular sin antigüedad en la escuela (`null`) queda último dentro del grupo.
+- Grupo 2: la antigüedad en la escuela no influye; el desempate sigue siendo la antigüedad docente.
 - Provisional y suplente con el mismo puntaje: va primero el de más antigüedad, sin importar cuál es provisional y cuál suplente.
 - Un externo con puntaje alto queda después de todo el grupo 2.
-- Dentro del grupo 1, el puntaje no influye.
+- Dentro del grupo 1, el puntaje no influye: solo la antigüedad en la escuela.
 - El filtro por turno y "solo verificados" excluyen bien y el número de orden se recalcula.
 - Los dados de baja no aparecen.
 
@@ -100,6 +107,7 @@ Notas:
 - `email`: `trim().toLowerCase()`.
 - `score`: se acepta `"38,45"` o `"38.45"`, se reemplaza la coma por punto y se convierte a Decimal con 2 decimales.
 - `seniorityMonths = years * 12 + months`.
+- `schoolSeniorityMonths = schoolSeniority.years * 12 + schoolSeniority.months`, solo si la situación es `TITULAR`, `PROVISIONAL` o `SUPLENTE`. Es obligatoria en esos casos (`400` con las claves `schoolSeniority.years` y `schoolSeniority.months`) y no puede superar a `seniorityMonths` (`400` en `schoolSeniority.years`: "No puede ser mayor que tu antigüedad docente."). Con `EXTERNO` se ignora aunque llegue y se guarda `null`.
 - Textos: `trim()` y espacios internos múltiples colapsados en uno.
 
 ### Algoritmo (todo en UNA transacción)
@@ -115,7 +123,7 @@ Notas:
 6. **Existe y el email no coincide**: responder `409 DATA_MISMATCH`.
 7. **Existe y el email coincide**: reemplazar.
    - Actualizar `lastName`, `firstName`, `phone` y `shifts`.
-   - Si cambió `employmentStatus` o `seniorityMonths`: actualizar, registrar `DATA_CHANGE` en el historial (valor anterior y nuevo en `detail`) y **poner `verified=false` en todas sus postulaciones**, porque cambiaron datos que definen el orden.
+   - Si cambió `employmentStatus`, `seniorityMonths` o `schoolSeniorityMonths`: actualizar, registrar `DATA_CHANGE` en el historial (valor anterior y nuevo de los tres campos en `detail`) y **poner `verified=false` en todas sus postulaciones**, porque cambiaron datos que definen el orden.
    - Comparar las postulaciones viejas con las nuevas, por `positionId`:
      - **Sigue con el mismo puntaje**: no se toca y conserva su verificación.
      - **Sigue con otro puntaje**: `previousScore = score viejo`, se asigna el `score` nuevo, `verified=false`, `modified=true`. Historial: `SCORE_CHANGE`.
