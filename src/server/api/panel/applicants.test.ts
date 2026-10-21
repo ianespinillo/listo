@@ -28,6 +28,7 @@ function registrationBody(overrides: Record<string, unknown> = {}) {
     phone: '11 5544 0921',
     employmentStatus: 'PROVISIONAL',
     seniority: { years: 9, months: 2 },
+    schoolSeniority: { years: 4, months: 1 },
     shifts: ['MANANA', 'TARDE'],
     applications: [
       { positionId: math, score: '38,45' },
@@ -73,6 +74,7 @@ describe('GET /api/panel/applicants/:id', () => {
       phone: '11 5544 0921',
       employmentStatus: 'PROVISIONAL',
       seniorityMonths: 110,
+      schoolSeniorityMonths: 49,
       shifts: ['MANANA', 'TARDE'],
       deactivated: false,
       cycle: { id: seeded.cycleId, year: 2027 },

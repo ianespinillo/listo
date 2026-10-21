@@ -55,6 +55,8 @@ export interface ApplicantSeed {
   phone?: string;
   employmentStatus?: 'TITULAR' | 'PROVISIONAL' | 'SUPLENTE' | 'EXTERNO';
   seniorityMonths?: number;
+  /** Por defecto: igual a la docente para quien trabaja en la escuela, null para externos. */
+  schoolSeniorityMonths?: number | null;
   shifts?: ('MANANA' | 'TARDE' | 'VESPERTINO')[];
   deactivated?: boolean;
 }
@@ -86,6 +88,12 @@ export async function createApplicant(
       phone: seed.phone ?? '11 5555 0000',
       employmentStatus: seed.employmentStatus ?? 'PROVISIONAL',
       seniorityMonths: seed.seniorityMonths ?? 12,
+      schoolSeniorityMonths:
+        seed.schoolSeniorityMonths !== undefined
+          ? seed.schoolSeniorityMonths
+          : seed.employmentStatus === 'EXTERNO'
+            ? null
+            : (seed.seniorityMonths ?? 12),
       shifts: seed.shifts ?? ['MANANA'],
       deactivated: seed.deactivated ?? false,
       applications: {

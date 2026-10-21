@@ -4,6 +4,8 @@ import type { Prisma } from '../../generated/prisma/client';
 
 // El orden del listado sale SOLO de este SQL (reglas-de-negocio §2). Siempre con el tagged
 // template de `$queryRaw`: los parámetros viajan escapados.
+// Decisión de la escuela: el grupo 1 se ordena por antigüedad en el establecimiento
+// (`school_seniority_months`), no por antigüedad docente.
 
 export type ApplicationStatus = 'VERIFIED' | 'MODIFIED' | 'UNVERIFIED';
 
@@ -29,6 +31,8 @@ export interface ListingRow {
   dni: string;
   employmentStatus: string;
   seniorityMonths: number;
+  /** Antigüedad en la escuela (meses); null si no la declaró. */
+  schoolSeniorityMonths: number | null;
   score: string;
   shifts: string[];
   status: ApplicationStatus;
@@ -43,6 +47,7 @@ interface RawRow {
   phone: string;
   employment_status: string;
   seniority_months: number;
+  school_seniority_months: number | null;
   shifts: string[];
   score: { toString(): string };
   verified: boolean;
@@ -60,7 +65,7 @@ export async function queryListing(db: Db, filters: ListingFilters): Promise<Lis
     WITH base AS (
       SELECT
         a.id, a.last_name, a.first_name, a.dni, a.phone,
-        a.employment_status, a.seniority_months, a.shifts::text[] AS shifts,
+        a.employment_status, a.seniority_months, a.school_seniority_months, a.shifts::text[] AS shifts,
         ap.score, ap.verified, ap.modified, ap.previous_score,
         CASE a.employment_status
           WHEN 'TITULAR'     THEN 1
@@ -81,7 +86,7 @@ export async function queryListing(db: Db, filters: ListingFilters): Promise<Lis
       ROW_NUMBER() OVER (
         ORDER BY
           group_number,
-          CASE WHEN group_number = 1      THEN seniority_months END DESC NULLS LAST,
+          CASE WHEN group_number = 1      THEN school_seniority_months END DESC NULLS LAST,
           CASE WHEN group_number IN (2,3) THEN score            END DESC NULLS LAST,
           CASE WHEN group_number = 2      THEN seniority_months END DESC NULLS LAST,
           last_name, first_name, id
@@ -99,6 +104,7 @@ export async function queryListing(db: Db, filters: ListingFilters): Promise<Lis
     dni: row.dni,
     employmentStatus: row.employment_status,
     seniorityMonths: row.seniority_months,
+    schoolSeniorityMonths: row.school_seniority_months,
     score: canonicalScore(row.score),
     shifts: row.shifts,
     status: applicationStatus(row.verified, row.modified),

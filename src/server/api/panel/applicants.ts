@@ -89,6 +89,7 @@ async function loadApplicantView(db: Db, id: number) {
     phone: applicant.phone,
     employmentStatus: applicant.employmentStatus,
     seniorityMonths: applicant.seniorityMonths,
+    schoolSeniorityMonths: applicant.schoolSeniorityMonths,
     shifts: applicant.shifts,
     deactivated: applicant.deactivated,
     cycle: { id: applicant.cycle.id, year: applicant.cycle.year },

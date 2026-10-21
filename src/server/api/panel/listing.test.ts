@@ -53,7 +53,7 @@ function names(body: Awaited<ReturnType<typeof getListing>>): string[] {
 
 describe('GET /api/panel/listing: forma de la respuesta', () => {
   it('devuelve ciclo, puesto, resumen y siempre los 3 grupos, con puntaje string de 2 decimales', async () => {
-    await add({ lastName: 'Gomez', employmentStatus: 'TITULAR', seniorityMonths: 256, phone: '11 4021 3387', shifts: ['MANANA', 'TARDE'] }, '44.1', { verified: true });
+    await add({ lastName: 'Gomez', employmentStatus: 'TITULAR', seniorityMonths: 256, schoolSeniorityMonths: 130, phone: '11 4021 3387', shifts: ['MANANA', 'TARDE'] }, '44.1', { verified: true });
     await add({ lastName: 'Lopez', employmentStatus: 'PROVISIONAL' }, '30.00', { modified: true });
     await add({ lastName: 'Ruiz', employmentStatus: 'EXTERNO' }, '20');
 
@@ -73,6 +73,7 @@ describe('GET /api/panel/listing: forma de la respuesta', () => {
       dni: expect.stringMatching(/^\d+$/),
       employmentStatus: 'TITULAR',
       seniorityMonths: 256,
+      schoolSeniorityMonths: 130,
       score: '44.10',
       shifts: ['MANANA', 'TARDE'],
       status: 'VERIFIED',
@@ -147,11 +148,29 @@ describe('GET /api/panel/listing: orden del decreto (reglas §2)', () => {
     expect(names(await getListing())).toEqual(['Alto', 'Bajo']);
   });
 
-  it('dentro del grupo 1 el puntaje no influye: solo la antigüedad', async () => {
-    await add({ lastName: 'PocoPuntaje', employmentStatus: 'TITULAR', seniorityMonths: 200 }, '1');
-    await add({ lastName: 'MuchoPuntaje', employmentStatus: 'TITULAR', seniorityMonths: 100 }, '99.99');
-    await add({ lastName: 'Intermedio', employmentStatus: 'TITULAR', seniorityMonths: 150 }, '50');
+  it('dentro del grupo 1 el puntaje no influye: solo la antigüedad en la escuela', async () => {
+    await add({ lastName: 'PocoPuntaje', employmentStatus: 'TITULAR', seniorityMonths: 200, schoolSeniorityMonths: 100 }, '1');
+    await add({ lastName: 'MuchoPuntaje', employmentStatus: 'TITULAR', seniorityMonths: 200, schoolSeniorityMonths: 40 }, '99.99');
+    await add({ lastName: 'Intermedio', employmentStatus: 'TITULAR', seniorityMonths: 200, schoolSeniorityMonths: 70 }, '50');
     expect(names(await getListing())).toEqual(['PocoPuntaje', 'Intermedio', 'MuchoPuntaje']);
+  });
+
+  it('grupo 1: un titular con menos antigüedad docente pero más antigüedad en la escuela va primero', async () => {
+    await add({ lastName: 'MuchaDocente', employmentStatus: 'TITULAR', seniorityMonths: 300, schoolSeniorityMonths: 24 }, '10');
+    await add({ lastName: 'MuchaEscuela', employmentStatus: 'TITULAR', seniorityMonths: 100, schoolSeniorityMonths: 96 }, '10');
+    expect(names(await getListing())).toEqual(['MuchaEscuela', 'MuchaDocente']);
+  });
+
+  it('grupo 1: quien no declaró antigüedad en la escuela (null) va último dentro del grupo', async () => {
+    await add({ lastName: 'SinDato', employmentStatus: 'TITULAR', seniorityMonths: 500, schoolSeniorityMonths: null }, '99');
+    await add({ lastName: 'ConDato', employmentStatus: 'TITULAR', seniorityMonths: 12, schoolSeniorityMonths: 0 }, '1');
+    expect(names(await getListing())).toEqual(['ConDato', 'SinDato']);
+  });
+
+  it('grupo 2: la antigüedad en la escuela no influye; el desempate sigue siendo la antigüedad docente', async () => {
+    await add({ lastName: 'DocenteVieja', employmentStatus: 'PROVISIONAL', seniorityMonths: 200, schoolSeniorityMonths: 6 }, '40');
+    await add({ lastName: 'EscuelaVieja', employmentStatus: 'SUPLENTE', seniorityMonths: 100, schoolSeniorityMonths: 100 }, '40');
+    expect(names(await getListing())).toEqual(['DocenteVieja', 'EscuelaVieja']);
   });
 
   it('el número de orden es global, de 1 a N recorriendo los grupos 1, 2 y 3', async () => {

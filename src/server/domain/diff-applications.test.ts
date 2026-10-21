@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { diffApplications } from './diff-applications';
 
-const base = { employmentStatus: 'PROVISIONAL', seniorityMonths: 110 };
+const base = { employmentStatus: 'PROVISIONAL', seniorityMonths: 110, schoolSeniorityMonths: 49 };
 
 describe('diffApplications', () => {
   it('sin cambios: no toca nada ni genera eventos', () => {
@@ -75,7 +75,7 @@ describe('diffApplications', () => {
   it('cambio de situación de revista: DATA_CHANGE y desverifica todo, incluso con el mismo puntaje', () => {
     const diff = diffApplications(
       { ...base, applications: [{ positionId: 1, score: '38.45', verified: true }] },
-      { employmentStatus: 'TITULAR', seniorityMonths: 110, applications: [{ positionId: 1, score: '38.45' }] },
+      { ...base, employmentStatus: 'TITULAR', applications: [{ positionId: 1, score: '38.45' }] },
     );
     expect(diff.dataChanged).toBe(true);
     expect(diff.unverifyAll).toBe(true);
@@ -86,8 +86,8 @@ describe('diffApplications', () => {
       {
         type: 'DATA_CHANGE',
         detail: {
-          previous: { employmentStatus: 'PROVISIONAL', seniorityMonths: 110 },
-          new: { employmentStatus: 'TITULAR', seniorityMonths: 110 },
+          previous: { employmentStatus: 'PROVISIONAL', seniorityMonths: 110, schoolSeniorityMonths: 49 },
+          new: { employmentStatus: 'TITULAR', seniorityMonths: 110, schoolSeniorityMonths: 49 },
         },
       },
     ]);
@@ -100,5 +100,31 @@ describe('diffApplications', () => {
     );
     expect(diff.dataChanged).toBe(true);
     expect(diff.events[0]?.type).toBe('DATA_CHANGE');
+  });
+
+  it('cambio de antigüedad en la escuela: DATA_CHANGE, desverifica todo y registra anterior y nuevo', () => {
+    const diff = diffApplications(
+      { ...base, applications: [{ positionId: 1, score: '38.45', verified: true }] },
+      { ...base, schoolSeniorityMonths: 60, applications: [{ positionId: 1, score: '38.45' }] },
+    );
+    expect(diff.dataChanged).toBe(true);
+    expect(diff.unverifyAll).toBe(true);
+    expect(diff.events).toEqual([
+      {
+        type: 'DATA_CHANGE',
+        detail: {
+          previous: { employmentStatus: 'PROVISIONAL', seniorityMonths: 110, schoolSeniorityMonths: 49 },
+          new: { employmentStatus: 'PROVISIONAL', seniorityMonths: 110, schoolSeniorityMonths: 60 },
+        },
+      },
+    ]);
+  });
+
+  it('pasar de null a un valor (inscripción anterior) también es un cambio de datos', () => {
+    const diff = diffApplications(
+      { ...base, schoolSeniorityMonths: null, applications: [] },
+      { ...base, applications: [] },
+    );
+    expect(diff.dataChanged).toBe(true);
   });
 });

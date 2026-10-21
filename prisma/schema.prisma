@@ -39,13 +39,13 @@ enum Shift {
 
 enum EventType {
   REGISTRATION
-  DATA_CHANGE      // cambió situación de revista o antigüedad
+  DATA_CHANGE // cambió situación de revista o antigüedad
   SCORE_CHANGE
   POSITION_ADDED
   POSITION_REMOVED
   VERIFICATION
   UNVERIFICATION
-  EMAIL_CHANGE     // lo hizo la directora desde el panel
+  EMAIL_CHANGE // lo hizo la directora desde el panel
   DEACTIVATION
   REACTIVATION
 
@@ -67,11 +67,11 @@ model Cycle {
 }
 
 model Position {
-  id           Int           @id @default(autoincrement())
-  name         String        @unique
+  id           Int            @id @default(autoincrement())
+  name         String         @unique
   type         PositionType
   // Un puesto con postulaciones no se borra: se desactiva
-  active       Boolean       @default(true)
+  active       Boolean        @default(true)
   applications Application[]
   events       HistoryEvent[]
 
@@ -79,22 +79,25 @@ model Position {
 }
 
 model Applicant {
-  id               Int              @id @default(autoincrement())
-  cycleId          Int              @map("cycle_id")
-  cycle            Cycle            @relation(fields: [cycleId], references: [id])
-  dni              String           // solo dígitos
-  lastName         String           @map("last_name")
-  firstName        String           @map("first_name")
-  email            String           // normalizado: trim + minúsculas
-  phone            String
-  employmentStatus EmploymentStatus @map("employment_status")
-  seniorityMonths  Int              @map("seniority_months")
-  shifts           Shift[]
-  deactivated      Boolean          @default(false)
-  createdAt        DateTime         @default(now()) @map("created_at")
-  updatedAt        DateTime         @updatedAt @map("updated_at")
-  applications     Application[]
-  events           HistoryEvent[]
+  id                    Int              @id @default(autoincrement())
+  cycleId               Int              @map("cycle_id")
+  cycle                 Cycle            @relation(fields: [cycleId], references: [id])
+  dni                   String // solo dígitos
+  lastName              String           @map("last_name")
+  firstName             String           @map("first_name")
+  email                 String // normalizado: trim + minúsculas
+  phone                 String
+  employmentStatus      EmploymentStatus @map("employment_status")
+  seniorityMonths       Int              @map("seniority_months")
+  // Antigüedad en esta escuela (meses). Solo titular/provisional/suplente; null para externos
+  // y para inscripciones anteriores. Ordena el grupo 1 del listado.
+  schoolSeniorityMonths Int?             @map("school_seniority_months")
+  shifts                Shift[]
+  deactivated           Boolean          @default(false)
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+  applications          Application[]
+  events                HistoryEvent[]
 
   @@unique([cycleId, dni])
   @@index([cycleId, deactivated])

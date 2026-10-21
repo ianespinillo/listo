@@ -3,7 +3,7 @@ import { diffApplications } from '../domain/diff-applications';
 import { seniorityToMonths } from '../domain/normalize';
 import { isRegistrationOpen, toDateString } from '../domain/registration-window';
 import { Prisma } from '../generated/prisma/client';
-import type { RegistrationInput } from './registration-schema';
+import { worksAtSchool, type RegistrationInput } from './registration-schema';
 
 // Inscripción y reemplazo (reglas-de-negocio §3). Todo el alta/reemplazo corre en UNA transacción.
 
@@ -15,6 +15,8 @@ export interface RegistrationSummary {
   firstName: string;
   dni: string;
   employmentStatus: string;
+  /** Antigüedad en la escuela en meses; null para externos. */
+  schoolSeniorityMonths: number | null;
   shifts: string[];
   applications: { position: string; score: string }[];
   registrationUntil: string;
@@ -76,12 +78,18 @@ async function registerInTransaction(
   if (Object.keys(fields).length > 0) return { kind: 'invalid', fields };
 
   const seniorityMonths = seniorityToMonths(input.seniority);
+  // El externo no declara antigüedad en la escuela: si llega, se ignora.
+  const schoolSeniorityMonths =
+    worksAtSchool(input.employmentStatus) && input.schoolSeniority
+      ? seniorityToMonths(input.schoolSeniority)
+      : null;
   const shifts = [...input.shifts].sort((a, b) => SHIFT_ORDER.indexOf(a) - SHIFT_ORDER.indexOf(b));
   const summary: RegistrationSummary = {
     lastName: input.lastName,
     firstName: input.firstName,
     dni: input.dni,
     employmentStatus: input.employmentStatus,
+    schoolSeniorityMonths,
     shifts,
     applications: input.applications.map((a) => ({
       position: positionNames.get(a.positionId) as string,
@@ -108,6 +116,7 @@ async function registerInTransaction(
         phone: input.phone,
         employmentStatus: input.employmentStatus,
         seniorityMonths,
+        schoolSeniorityMonths,
         shifts,
         applications: {
           create: input.applications.map((a) => ({ positionId: a.positionId, score: a.score })),
@@ -126,11 +135,13 @@ async function registerInTransaction(
     {
       employmentStatus: existing.employmentStatus,
       seniorityMonths: existing.seniorityMonths,
+      schoolSeniorityMonths: existing.schoolSeniorityMonths,
       applications: existing.applications,
     },
     {
       employmentStatus: input.employmentStatus,
       seniorityMonths,
+      schoolSeniorityMonths,
       applications: input.applications,
     },
   );
@@ -144,6 +155,7 @@ async function registerInTransaction(
       shifts,
       employmentStatus: input.employmentStatus,
       seniorityMonths,
+      schoolSeniorityMonths,
     },
   });
 

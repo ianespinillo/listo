@@ -23,6 +23,7 @@ function validBody(seeded: SeededCycle, overrides: Record<string, unknown> = {})
     phone: '11 5544 0921',
     employmentStatus: 'PROVISIONAL',
     seniority: { years: 9, months: 2 },
+    schoolSeniority: { years: 4, months: 1 },
     shifts: ['TARDE', 'MANANA'],
     applications: [
       { positionId: seeded.positions[0].id, score: '38,45' },
@@ -104,6 +105,7 @@ describe('POST /api/public/registration: alta', () => {
         firstName: 'Laura Inés',
         dni: '28123456',
         employmentStatus: 'PROVISIONAL',
+        schoolSeniorityMonths: 49,
         shifts: ['MANANA', 'TARDE'],
         applications: [
           { position: 'Matemática', score: '38.45' },
@@ -117,6 +119,7 @@ describe('POST /api/public/registration: alta', () => {
     const applicant = await findApplicant();
     expect(applicant.email).toBe('laura.pereyra@ejemplo.com');
     expect(applicant.seniorityMonths).toBe(110);
+    expect(applicant.schoolSeniorityMonths).toBe(49);
     expect(applicant.applications).toHaveLength(2);
     expect(applicant.applications.every((a) => !a.verified && !a.modified)).toBe(true);
     expect(applicant.events.map((e) => e.type)).toEqual(['REGISTRATION']);
@@ -225,8 +228,27 @@ describe('POST /api/public/registration: reemplazo', () => {
     expect(applicant.applications.every((a) => !a.modified)).toBe(true);
     const dataChange = applicant.events.find((e) => e.type === 'DATA_CHANGE')!;
     expect(dataChange.detail).toEqual({
-      previous: { employmentStatus: 'PROVISIONAL', seniorityMonths: 110 },
-      new: { employmentStatus: 'TITULAR', seniorityMonths: 120 },
+      previous: { employmentStatus: 'PROVISIONAL', seniorityMonths: 110, schoolSeniorityMonths: 49 },
+      new: { employmentStatus: 'TITULAR', seniorityMonths: 120, schoolSeniorityMonths: 49 },
+    });
+  });
+
+  it('cambiar solo la antigüedad en la escuela: DATA_CHANGE, desverifica todo y guarda el valor', async () => {
+    const app = await createAndVerify();
+    const res = await request(app)
+      .post('/api/public/registration')
+      .send(validBody(seeded, { schoolSeniority: { years: 6, months: 0 } }));
+
+    expect(res.status).toBe(200);
+    expect(res.body.summary.schoolSeniorityMonths).toBe(72);
+    const applicant = await findApplicant();
+    expect(applicant.schoolSeniorityMonths).toBe(72);
+    expect(applicant.applications.every((a) => !a.verified)).toBe(true);
+    expect(applicant.applications.every((a) => !a.modified)).toBe(true);
+    const dataChange = applicant.events.find((e) => e.type === 'DATA_CHANGE')!;
+    expect(dataChange.detail).toEqual({
+      previous: { employmentStatus: 'PROVISIONAL', seniorityMonths: 110, schoolSeniorityMonths: 49 },
+      new: { employmentStatus: 'PROVISIONAL', seniorityMonths: 110, schoolSeniorityMonths: 72 },
     });
   });
 
@@ -484,5 +506,68 @@ describe('POST /api/public/registration: transacción', () => {
       before.applications.map((a) => [a.positionId, a.score.toString()]),
     );
     expect(after.events).toHaveLength(before.events.length);
+  });
+});
+
+describe('POST /api/public/registration: antigüedad en la escuela', () => {
+  const missing = (status: string) => {
+    it(`es obligatoria para ${status}: 400 con la clave de cada campo`, async () => {
+      const body = validBody(seeded, { employmentStatus: status });
+      delete (body as Record<string, unknown>)['schoolSeniority'];
+      const res = await request(buildApp()).post('/api/public/registration').send(body);
+
+      expect(res.status).toBe(400);
+      expect(Object.keys(res.body.fields).sort()).toEqual(['schoolSeniority.months', 'schoolSeniority.years']);
+      expect(await prisma.applicant.count()).toBe(0);
+    });
+  };
+  missing('TITULAR');
+  missing('PROVISIONAL');
+  missing('SUPLENTE');
+
+  it('fuera de rango: 400 con la clave del campo', async () => {
+    const res = await request(buildApp())
+      .post('/api/public/registration')
+      .send(validBody(seeded, { schoolSeniority: { years: 61, months: 12 } }));
+    expect(res.status).toBe(400);
+    expect(Object.keys(res.body.fields).sort()).toEqual(['schoolSeniority.months', 'schoolSeniority.years']);
+  });
+
+  it('mayor que la antigüedad docente: 400 en schoolSeniority.years', async () => {
+    const res = await request(buildApp())
+      .post('/api/public/registration')
+      .send(validBody(seeded, { schoolSeniority: { years: 9, months: 3 } }));
+    expect(res.status).toBe(400);
+    expect(res.body.fields).toEqual({
+      'schoolSeniority.years': 'No puede ser mayor que tu antigüedad docente.',
+    });
+  });
+
+  it('igual a la antigüedad docente es válida', async () => {
+    const res = await request(buildApp())
+      .post('/api/public/registration')
+      .send(validBody(seeded, { schoolSeniority: { years: 9, months: 2 } }));
+    expect(res.status).toBe(201);
+    expect(res.body.summary.schoolSeniorityMonths).toBe(110);
+  });
+
+  it('externo sin el dato: 201 y se guarda null', async () => {
+    const body = validBody(seeded, { employmentStatus: 'EXTERNO' });
+    delete (body as Record<string, unknown>)['schoolSeniority'];
+    const res = await request(buildApp()).post('/api/public/registration').send(body);
+
+    expect(res.status).toBe(201);
+    expect(res.body.summary.schoolSeniorityMonths).toBeNull();
+    expect((await findApplicant()).schoolSeniorityMonths).toBeNull();
+  });
+
+  it('externo que lo manda igual: se ignora y se guarda null', async () => {
+    const res = await request(buildApp())
+      .post('/api/public/registration')
+      .send(validBody(seeded, { employmentStatus: 'EXTERNO' }));
+
+    expect(res.status).toBe(201);
+    expect(res.body.summary.schoolSeniorityMonths).toBeNull();
+    expect((await findApplicant()).schoolSeniorityMonths).toBeNull();
   });
 });

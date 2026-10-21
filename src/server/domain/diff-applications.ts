@@ -5,6 +5,7 @@ import { canonicalScore } from './normalize';
 export interface DiffState {
   employmentStatus: string;
   seniorityMonths: number;
+  schoolSeniorityMonths: number | null;
 }
 
 export interface OldApplication {
@@ -27,7 +28,7 @@ export interface DiffEvent {
 }
 
 export interface ApplicationsDiff {
-  /** Cambió la situación de revista o la antigüedad. */
+  /** Cambió la situación de revista o alguna antigüedad (docente o en la escuela). */
   dataChanged: boolean;
   /**
    * Si es true hay que poner `verified=false` en TODAS las postulaciones que se conservan
@@ -48,15 +49,25 @@ export function diffApplications(
   next: DiffState & { applications: NewApplication[] },
 ): ApplicationsDiff {
   const dataChanged =
-    old.employmentStatus !== next.employmentStatus || old.seniorityMonths !== next.seniorityMonths;
+    old.employmentStatus !== next.employmentStatus ||
+    old.seniorityMonths !== next.seniorityMonths ||
+    old.schoolSeniorityMonths !== next.schoolSeniorityMonths;
 
   const events: DiffEvent[] = [];
   if (dataChanged) {
     events.push({
       type: 'DATA_CHANGE',
       detail: {
-        previous: { employmentStatus: old.employmentStatus, seniorityMonths: old.seniorityMonths },
-        new: { employmentStatus: next.employmentStatus, seniorityMonths: next.seniorityMonths },
+        previous: {
+          employmentStatus: old.employmentStatus,
+          seniorityMonths: old.seniorityMonths,
+          schoolSeniorityMonths: old.schoolSeniorityMonths,
+        },
+        new: {
+          employmentStatus: next.employmentStatus,
+          seniorityMonths: next.seniorityMonths,
+          schoolSeniorityMonths: next.schoolSeniorityMonths,
+        },
       },
     });
   }

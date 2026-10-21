@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { normalizeDni, normalizeEmail, normalizeScore, normalizeText } from '../domain/normalize';
+import {
+  normalizeDni,
+  normalizeEmail,
+  normalizeScore,
+  normalizeText,
+  seniorityToMonths,
+} from '../domain/normalize';
 
 // Validación del cuerpo de POST /api/public/registration. Normaliza y después valida;
 // los mensajes son para mostrar al usuario. Las claves de `fields` salen del path de zod
@@ -24,6 +30,19 @@ function requiredText(min: number, max: number, tooShort: string, tooLong: strin
 function integerInRange(min: number, max: number, message: string) {
   return z.number({ error: message }).int(message).min(min, message).max(max, message);
 }
+
+/** Antigüedad como { years, months }, con los rangos del decreto (0–60 años, 0–11 meses). */
+function seniority(missing: string) {
+  return z.object(
+    {
+      years: integerInRange(0, 60, 'Los años deben ser un número entero entre 0 y 60.'),
+      months: integerInRange(0, 11, 'Los meses deben ser un número entero entre 0 y 11.'),
+    },
+    { error: missing },
+  );
+}
+
+export const SCHOOL_SENIORITY_TOO_HIGH_MESSAGE = 'No puede ser mayor que tu antigüedad docente.';
 
 const score = z.union([z.string(), z.number()], { error: 'Ingresá el puntaje.' }).transform((value, ctx) => {
   const result = normalizeScore(value);
@@ -54,13 +73,9 @@ export const registrationSchema = z.object({
   email: emailSchema,
   phone: requiredText(6, 30, 'El teléfono debe tener al menos 6 caracteres.', 'El teléfono puede tener hasta 30 caracteres.'),
   employmentStatus: z.enum(EMPLOYMENT_STATUSES, { error: 'Elegí tu situación de revista.' }),
-  seniority: z.object(
-    {
-      years: integerInRange(0, 60, 'Los años deben ser un número entero entre 0 y 60.'),
-      months: integerInRange(0, 11, 'Los meses deben ser un número entero entre 0 y 11.'),
-    },
-    { error: 'Ingresá tu antigüedad.' },
-  ),
+  seniority: seniority('Ingresá tu antigüedad.'),
+  // Obligatoria para titular/provisional/suplente (ver superRefine); para externo se ignora.
+  schoolSeniority: seniority('Ingresá tu antigüedad en esta escuela.').optional(),
   shifts: z
     .array(z.enum(SHIFTS, { error: 'Turno inválido.' }), { error: 'Elegí al menos un turno.' })
     .min(1, 'Elegí al menos un turno.')
@@ -92,7 +107,32 @@ export const registrationSchema = z.object({
       });
     }),
   declaration: z.literal(true, { error: 'Tenés que aceptar la declaración para enviar.' }),
+}).superRefine((data, ctx) => {
+  // Quienes trabajan en la escuela declaran su antigüedad en ella; el externo no.
+  if (!worksAtSchool(data.employmentStatus)) return;
+  if (!data.schoolSeniority) {
+    for (const part of ['years', 'months']) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Ingresá tu antigüedad en esta escuela.',
+        path: ['schoolSeniority', part],
+      });
+    }
+    return;
+  }
+  if (seniorityToMonths(data.schoolSeniority) > seniorityToMonths(data.seniority)) {
+    ctx.addIssue({
+      code: 'custom',
+      message: SCHOOL_SENIORITY_TOO_HIGH_MESSAGE,
+      path: ['schoolSeniority', 'years'],
+    });
+  }
 });
+
+/** Titular, provisional y suplente trabajan en la escuela; el externo no. */
+export function worksAtSchool(employmentStatus: string): boolean {
+  return employmentStatus !== 'EXTERNO';
+}
 
 export type RegistrationInput = z.output<typeof registrationSchema>;
 
