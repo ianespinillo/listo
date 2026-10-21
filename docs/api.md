@@ -19,7 +19,7 @@ Formato de error común:
 elementos de la lista se escriben así: `applications.1.score`.
 
 Códigos de error: `VALIDATION_ERROR`, `REGISTRATION_CLOSED`, `DATA_MISMATCH`,
-`TOO_MANY_REQUESTS`, `UNAUTHENTICATED`, `INVALID_CREDENTIALS`, `DUPLICATE_POSITION`,
+`TOO_MANY_REQUESTS`, `UNAUTHENTICATED`, `INVALID_CREDENTIALS`, `UNSUPPORTED_MEDIA_TYPE`, `DUPLICATE_POSITION`,
 `CYCLE_ARCHIVED`, `CYCLE_EXISTS`, `NOT_FOUND`, `DATABASE_UNAVAILABLE` e `INTERNAL_ERROR`
 (`500`, error no previsto; el `message` es genérico y nunca expone detalles internos).
 
@@ -95,7 +95,7 @@ Sesión:
 - Cookie `listo_session`: `httpOnly`, `sameSite=lax`, `secure` en producción, 7 días.
 - Se guarda **el hash SHA-256 del token** en la tabla `session` (modelo `Session`), nunca el token.
 
-Las rutas que modifican datos solo aceptan `Content-Type: application/json`, como defensa básica contra CSRF.
+Las rutas que modifican datos (`POST`, `PUT`, `PATCH`, `DELETE`) solo aceptan `Content-Type: application/json`, como defensa básica contra CSRF. Esto incluye las que no llevan cuerpo (el front manda `{}`). Si no, responden `415 UNSUPPORTED_MEDIA_TYPE`.
 
 ### Sesión
 
@@ -142,15 +142,28 @@ Las rutas que modifican datos solo aceptan `Content-Type: application/json`, com
 
 Siempre vienen los 3 grupos, aunque estén vacíos.
 
+Comportamiento:
+- Se usa el ciclo activo. Si no hay ninguno, responde `200` con `cycle: null`, `summary` en cero y los 3 grupos vacíos.
+- Si falta `positionId`, se usa el primer puesto activo por nombre (si no hay puestos activos, `position: null`). Se puede pedir un puesto inactivo. Un `positionId` que no existe responde `404 NOT_FOUND`.
+- Un `shift` que no sea `MANANA`, `TARDE` o `VESPERTINO`, o un `onlyVerified` que no sea `true` o `false`, responde `400 VALIDATION_ERROR`.
+- `summary` se calcula sobre las filas devueltas, es decir, después de aplicar los filtros.
+- `order` es el número global (1..N) de las filas devueltas: con filtros se renumera.
+
 ### Postulantes
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `GET /api/panel/applicants/:id` | — | datos + `applications[]` (`position`, `score`, `previousScore`, `status`) + `history[]` (`date`, `type`, `position`, `detail`) |
+| `GET /api/panel/applicants/:id` | — | datos + `applications[]` (`position`, `score`, `previousScore`, `status`, `group`, `order`) + `history[]` (`date`, `type`, `position`, `detail`) |
 | `PATCH /api/panel/applicants/:id` | `{ "email" }` | `200` con el postulante (el email no es único entre postulantes) |
 | `POST /api/panel/applicants/:id/deactivate` | — | `204` · historial `DEACTIVATION` |
 | `POST /api/panel/applicants/:id/reactivate` | — | `204` · historial `REACTIVATION` |
 | `PUT /api/panel/applicants/:id/applications/:positionId/verification` | `{ "verified": true }` | `200` con la postulación |
+
+Detalle del postulante:
+- Datos: `id`, `dni`, `lastName`, `firstName`, `email`, `phone`, `employmentStatus`, `seniorityMonths`, `shifts`, `deactivated` y `cycle` (`{ id, year }`).
+- `applications[]`, ordenadas por nombre de puesto: `position` (`{ id, name, type, active }`), `score` y `previousScore` (string con 2 decimales o `null`), `status` (igual que en el listado) y `group` y `order`, que son el grupo y el número de orden del postulante en ese puesto, calculados con el mismo orden del listado y **sin filtros**. Valen `null` si el postulante está dado de baja o es de un ciclo que no es el activo.
+- `history[]`, del más nuevo al más viejo: `date` (ISO 8601), `type`, `position` (nombre del puesto o `null`) y `detail` (JSON o `null`).
+- `PUT .../verification` y `PATCH` también devuelven esta forma (la postulación y el postulante, respectivamente). Verificar y quitar la verificación son idempotentes: si el estado no cambia, no se registra un evento nuevo. Lo mismo vale para dar de baja y reactivar.
 
 Editar el email registra `EMAIL_CHANGE` en el historial. El `detail` no guarda el email anterior.
 
@@ -168,8 +181,16 @@ Tipos de historial (`EventType`): `REGISTRATION`, `DATA_CHANGE`, `SCORE_CHANGE`,
 
 ### Ciclos
 
+Cada ciclo (en la lista y en las respuestas de `PATCH` y `POST`) tiene esta forma:
+
+```json
+{ "id": 3, "year": 2027, "registrationFrom": "2027-02-01", "registrationUntil": "2027-02-28", "active": true, "open": false, "applicants": 12 }
+```
+
+`open` se calcula con la fecha de Buenos Aires y es `false` para los ciclos que no están activos. `applicants` cuenta los postulantes que no están dados de baja. Las fechas son obligatorias, con formato `AAAA-MM-DD`, y `registrationFrom` no puede ser posterior a `registrationUntil` (`400 VALIDATION_ERROR` con `fields`). Un ciclo que no es el activo está archivado y no se edita.
+
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `GET /api/panel/cycles` | — | lista, con el activo primero |
+| `GET /api/panel/cycles` | — | lista, con el activo primero y después por año descendente |
 | `PATCH /api/panel/cycles/:id` | `{ "registrationFrom", "registrationUntil" }` | `200` · `400` si desde > hasta · `409 CYCLE_ARCHIVED` |
 | `POST /api/panel/cycles` | `{ "year", "registrationFrom", "registrationUntil" }` | `201`: crea el ciclo y lo deja activo (desactiva el anterior) · `409 CYCLE_EXISTS` |
