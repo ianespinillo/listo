@@ -125,7 +125,7 @@
               }}
             </p>
           } @else {
-            <div class="p-table-wrap">
+            <div class="p-table-wrap" tabindex="0" role="region" [attr.aria-label]="'Tabla del grupo ' + group.group">
               <table class="p-table listing-table">
                 <caption class="visually-hidden">
                   Grupo {{ group.group }}: {{ group.info.title }}. {{ group.info.rule }}.

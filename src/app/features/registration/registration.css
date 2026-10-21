@@ -192,6 +192,10 @@ legend + * {
   accent-color: var(--tiza);
 }
 
+.pill:has(input:checked) input:focus-visible {
+  outline-color: var(--tiza);
+}
+
 .pill:has(input:checked) {
   border-color: var(--pizarron);
   background: var(--pizarron);

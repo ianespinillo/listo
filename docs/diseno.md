@@ -35,7 +35,7 @@ Sobre fondo verde se invierte: el cuadrado va en `--papel`, las barras en `--piz
   --papel: #F6F5F1;           /* fondo de página */
   --superficie: #FFFFFF;      /* tarjetas */
   --borde: #DAD8D0;
-  --borde-input: #C9C6BC;
+  --borde-input: #8A877D;
   --separador: #ECEAE3;
 
   --ok-fondo: #DCEBDF;  --ok-texto: #1F4D3A;    /* Verificado */
@@ -53,7 +53,8 @@ Sobre fondo verde se invierte: el cuadrado va en `--papel`, las barras en `--piz
   --fuente-numeros: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
-:focus-visible { outline: 3px solid var(--tiza); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--pizarron); outline-offset: 2px; }
+.p-header :focus-visible, .login-side :focus-visible { outline-color: var(--tiza); } /* sobre fondo verde */
 ```
 
 **Fuentes** (Google Fonts, en `index.html`): Bricolage Grotesque 500/700, IBM Plex Sans 400/500/600

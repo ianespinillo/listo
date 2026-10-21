@@ -89,7 +89,7 @@
             @if (a.applications.length === 0) {
               <p class="p-state">Este postulante no tiene postulaciones.</p>
             } @else {
-              <div class="p-table-wrap">
+              <div class="p-table-wrap" tabindex="0" role="region" aria-label="Tabla de postulaciones">
                 <table class="p-table apps-table">
                   <caption class="visually-hidden">Postulaciones de {{ fullName() }}</caption>
                   <thead>

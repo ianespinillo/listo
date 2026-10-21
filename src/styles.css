@@ -11,7 +11,7 @@
   --papel: #F6F5F1;           /* fondo de página */
   --superficie: #FFFFFF;      /* tarjetas */
   --borde: #DAD8D0;
-  --borde-input: #C9C6BC;
+  --borde-input: #8A877D;   /* borde de campos y botones: 3:1 sobre blanco y papel (WCAG 1.4.11) */
   --separador: #ECEAE3;
 
   --ok-fondo: #DCEBDF;  --ok-texto: #1F4D3A;    /* Verificado */
@@ -76,9 +76,15 @@ select {
   font: inherit;
 }
 
+/* Aro de foco: verde sobre fondos claros (9:1 sobre blanco); tiza solo sobre verde (5:1). */
 :focus-visible {
-  outline: 3px solid var(--tiza);
+  outline: 3px solid var(--pizarron);
   outline-offset: 2px;
+}
+
+.p-header :focus-visible,
+.login-side :focus-visible {
+  outline-color: var(--tiza);
 }
 
 /* Para mover el foco a un título sin dibujarle el aro. */
@@ -193,6 +199,11 @@ select {
   background: var(--superficie);
   color: var(--tinta);
   font-size: 16px;
+}
+
+.input::placeholder {
+  color: var(--texto-3);
+  opacity: 1;
 }
 
 .input[aria-invalid='true'] {

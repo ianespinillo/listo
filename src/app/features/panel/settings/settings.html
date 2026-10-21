@@ -136,7 +136,7 @@
         @if (positions().length === 0) {
           <p class="p-state">Todavía no hay puestos. Agregá el primero.</p>
         } @else {
-          <div class="p-table-wrap">
+          <div class="p-table-wrap" tabindex="0" role="region" aria-label="Tabla de materias y cargos">
             <table class="p-table positions-table">
               <caption class="visually-hidden">Materias y cargos</caption>
               <thead>
