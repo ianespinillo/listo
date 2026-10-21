@@ -25,6 +25,11 @@ export const routes: Routes = [
         title: 'Listado · Listo',
         loadComponent: () => import('./features/panel/listing/listing').then((m) => m.Listing),
       },
+      {
+        path: 'postulantes/:id',
+        title: 'Postulante · Listo',
+        loadComponent: () => import('./features/panel/detail/detail').then((m) => m.Detail),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

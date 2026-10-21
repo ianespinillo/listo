@@ -1,0 +1,247 @@
+<a class="back no-print" routerLink="/panel" [queryParams]="backQuery()">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+  {{ originApplication() ? 'Volver al listado de ' + originApplication()!.position.name : 'Volver al listado' }}
+</a>
+
+<p class="visually-hidden" role="status" aria-live="polite">{{ announcement() }}</p>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="p-state" role="status">Cargando el postulante…</p>
+  }
+  @case ('error') {
+    <div class="p-state" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="pbtn pbtn-outline retry" (click)="load()">Reintentar</button>
+    </div>
+  }
+  @case ('notFound') {
+    <div class="p-state" role="alert">
+      <p>No encontramos a ese postulante. Puede que el enlace sea viejo.</p>
+      <a class="pbtn pbtn-outline retry" routerLink="/panel">Ir al listado</a>
+    </div>
+  }
+  @case ('ready') {
+    @if (applicant(); as a) {
+      <div class="p-head">
+        <div class="p-head-text">
+          <h1 class="p-title">{{ fullName() }}</h1>
+          <p class="p-sub">
+            {{ employmentSentence[a.employmentStatus] }}
+            @if (originApplication(); as origin) {
+              @if (origin.group !== null && origin.order !== null) {
+                · Grupo {{ origin.group }} · Orden {{ origin.order }} en {{ origin.position.name }}
+              }
+            }
+          </p>
+        </div>
+        <div class="p-actions no-print">
+          <button type="button" class="pbtn pbtn-outline" (click)="openEmail()">Editar email</button>
+          @if (a.deactivated) {
+            <button type="button" class="pbtn pbtn-primary" [disabled]="acting()" (click)="reactivate()">
+              Reactivar
+            </button>
+          } @else {
+            <button type="button" class="pbtn pbtn-danger" (click)="openDeactivate()">Dar de baja</button>
+          }
+        </div>
+      </div>
+
+      @if (a.deactivated) {
+        <p class="notice notice-warn" role="note">
+          Este postulante está dado de baja: no aparece en el listado ni en el orden de ninguna materia.
+          Podés reactivarlo cuando quieras.
+        </p>
+      }
+      @if (actionError()) {
+        <p class="alert" role="alert">{{ actionError() }}</p>
+      }
+
+      <div class="layout">
+        <section class="p-card data" aria-labelledby="h-data">
+          <h2 class="p-h2" id="h-data">Datos</h2>
+          <dl>
+            <div><dt>DNI</dt><dd class="num">{{ a.dni }}</dd></div>
+            <div><dt>Email</dt><dd class="email">{{ a.email }}</dd></div>
+            <div><dt>Teléfono</dt><dd class="num">{{ a.phone }}</dd></div>
+            <div><dt>Situación de revista</dt><dd>{{ employment[a.employmentStatus] }}</dd></div>
+            <div><dt>Antigüedad docente</dt><dd class="num">{{ seniorityLong(a.seniorityMonths) }}</dd></div>
+            <div>
+              <dt>Turnos</dt>
+              <dd class="chips">
+                @for (shift of orderedShifts(); track shift) {
+                  <span class="chip">{{ shiftFull[shift] }}</span>
+                } @empty {
+                  <span>Sin turnos</span>
+                }
+              </dd>
+            </div>
+            <div><dt>Ciclo lectivo</dt><dd class="num">{{ a.cycle.year }}</dd></div>
+          </dl>
+        </section>
+
+        <div class="right">
+          <section class="p-card apps" aria-labelledby="h-apps">
+            <div class="apps-head">
+              <h2 class="p-h2" id="h-apps">Postulaciones</h2>
+              <p class="p-sub">Verificá cada puntaje contra el Listado Oficial del distrito.</p>
+            </div>
+            @if (a.applications.length === 0) {
+              <p class="p-state">Este postulante no tiene postulaciones.</p>
+            } @else {
+              <div class="p-table-wrap">
+                <table class="p-table apps-table">
+                  <caption class="visually-hidden">Postulaciones de {{ fullName() }}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Materia</th>
+                      <th scope="col">Puntaje</th>
+                      <th scope="col">Estado</th>
+                      <th scope="col" class="right-align no-print">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (app of a.applications; track app.position.id) {
+                      <tr [class.is-modified]="app.status === 'MODIFIED'">
+                        <th scope="row" class="position">
+                          <span class="pname">{{ app.position.name }}</span>
+                          @if (!app.position.active) {
+                            <span class="note">Puesto inactivo</span>
+                          }
+                          @if (app.group !== null && app.order !== null) {
+                            <span class="note">Grupo {{ app.group }} · Orden {{ app.order }}</span>
+                          }
+                        </th>
+                        <td>
+                          <span class="num pts">{{ score(app.score) }}</span>
+                          @if (app.previousScore) {
+                            <span class="num before">antes {{ score(app.previousScore) }}</span>
+                          }
+                        </td>
+                        <td><span [class]="statusBadge[app.status]">{{ statusLabel[app.status] }}</span></td>
+                        <td class="right-align no-print">
+                          <button
+                            type="button"
+                            class="pbtn"
+                            [class.pbtn-primary]="app.status !== 'VERIFIED'"
+                            [class.pbtn-outline]="app.status === 'VERIFIED'"
+                            [disabled]="verifying() !== null"
+                            (click)="toggleVerification(app)"
+                          >
+                            {{ app.status === 'VERIFIED' ? 'Quitar verificación' : 'Marcar verificado' }}
+                            <span class="visually-hidden"> de {{ app.position.name }}</span>
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </section>
+
+          <section class="p-card" aria-labelledby="h-hist">
+            <h2 class="p-h2" id="h-hist">Historial</h2>
+            <ol class="history">
+              @for (event of a.history; track $index) {
+                <li>
+                  <time class="num when" [attr.datetime]="event.date">{{ dateTime(event.date) }}</time>
+                  <span>
+                    @switch (event.type) {
+                      @case ('REGISTRATION') {
+                        Se inscribió.
+                      }
+                      @case ('DATA_CHANGE') {
+                        Cambió sus datos{{ dataChangeSummary(event) }}. Sus postulaciones quedaron sin verificar.
+                      }
+                      @case ('SCORE_CHANGE') {
+                        Cambió el puntaje de <strong>{{ event.position ?? 'un puesto' }}</strong>:
+                        <span class="num">{{ scoreOf(event, 'previous') }} → {{ scoreOf(event, 'new') }}</span>.
+                        Quedó sin verificar.
+                      }
+                      @case ('POSITION_ADDED') {
+                        Agregó <strong>{{ event.position ?? 'un puesto' }}</strong> con puntaje
+                        <span class="num">{{ scoreOf(event, 'score') }}</span>.
+                      }
+                      @case ('POSITION_REMOVED') {
+                        Quitó <strong>{{ event.position ?? 'un puesto' }}</strong> (puntaje
+                        <span class="num">{{ scoreOf(event, 'score') }}</span>).
+                      }
+                      @case ('VERIFICATION') {
+                        Verificaste <strong>{{ event.position ?? 'un puesto' }}</strong>.
+                      }
+                      @case ('UNVERIFICATION') {
+                        Quitaste la verificación de <strong>{{ event.position ?? 'un puesto' }}</strong>.
+                      }
+                      @case ('EMAIL_CHANGE') {
+                        Se cambió el email.
+                      }
+                      @case ('DEACTIVATION') {
+                        Se dio de baja al postulante.
+                      }
+                      @case ('REACTIVATION') {
+                        Se reactivó al postulante.
+                      }
+                      @default {
+                        Se registró un cambio.
+                      }
+                    }
+                  </span>
+                </li>
+              } @empty {
+                <li>Todavía no hay movimientos.</li>
+              }
+            </ol>
+          </section>
+        </div>
+      </div>
+    }
+  }
+}
+
+<dialog #emailDialog class="p-dialog" aria-labelledby="d-email-title">
+  <form class="p-dialog-body" (submit)="$event.preventDefault(); saveEmail()" novalidate>
+    <h2 class="p-h2" id="d-email-title">Editar email</h2>
+    <p class="p-sub">Usalo cuando el docente cambió de email y no puede reemplazar su inscripción.</p>
+    <div class="field">
+      <label for="d-email">Email del docente</label>
+      <input
+        id="d-email"
+        class="input"
+        type="email"
+        autocomplete="off"
+        [formControl]="emailControl"
+        [attr.aria-invalid]="emailError() ? 'true' : null"
+        [attr.aria-describedby]="emailError() ? 'd-email-error' : null"
+      />
+      @if (emailError()) {
+        <p class="error" id="d-email-error" role="alert">{{ emailError() }}</p>
+      }
+    </div>
+    <div class="p-actions">
+      <button type="button" class="pbtn pbtn-outline" (click)="closeEmail()">Cancelar</button>
+      <button type="submit" class="pbtn pbtn-primary" [disabled]="emailSending()">
+        {{ emailSending() ? 'Guardando…' : 'Guardar email' }}
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<dialog #deactivateDialog class="p-dialog" aria-labelledby="d-baja-title" aria-describedby="d-baja-text">
+  <div class="p-dialog-body">
+    <h2 class="p-h2" id="d-baja-title">Dar de baja a {{ fullName() }}</h2>
+    <p id="d-baja-text">
+      Va a dejar de aparecer en el listado de todas las materias. No se borra nada: podés reactivarlo
+      cuando quieras.
+    </p>
+    @if (deactivateError()) {
+      <p class="alert" role="alert">{{ deactivateError() }}</p>
+    }
+    <div class="p-actions">
+      <button type="button" class="pbtn pbtn-outline" (click)="closeDeactivate()">Cancelar</button>
+      <button type="button" class="pbtn pbtn-danger is-solid" [disabled]="acting()" (click)="deactivate()">
+        {{ acting() ? 'Dando de baja…' : 'Dar de baja' }}
+      </button>
+    </div>
+  </div>
+</dialog>
