@@ -185,3 +185,4 @@ Están detalladas en [`docs/reglas-de-negocio.md`](docs/reglas-de-negocio.md), s
 1. **Orden para cargos** (por ejemplo, preceptor): el decreto no define las claves; por ahora se usa el mismo orden que para módulos.
 2. **Desempate final** de los grupos 1 y 3: hoy es apellido y nombre, que no figura en el decreto.
 3. **Acta de ofrecimiento y envío a SAD** en 48 horas: posible etapa futura.
+# listo
