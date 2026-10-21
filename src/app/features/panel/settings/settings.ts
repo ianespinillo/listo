@@ -16,7 +16,7 @@ import { CycleItem, PanelPosition } from '../../../core/panel-api.models';
 import { PanelApiService, parseApiError } from '../../../core/panel-api.service';
 import { PanelContext } from '../../../core/panel-context';
 import { PositionType } from '../../../core/public-api.models';
-import { formatIsoDate, todayInBuenosAires } from '../panel.format';
+import { formatIsoDate, todayInBuenosAires } from '../../../core/format';
 
 type ViewState = 'loading' | 'ready' | 'error';
 

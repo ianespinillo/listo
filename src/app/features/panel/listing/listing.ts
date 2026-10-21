@@ -26,14 +26,14 @@ import { PanelContext } from '../../../core/panel-context';
 import { Shift } from '../../../core/public-api.models';
 import {
   EMPLOYMENT_SHORT,
-  SHIFT_FULL,
   SHIFT_INITIAL,
+  SHIFT_LABELS,
   SHIFT_ORDER,
   STATUS_BADGE,
   STATUS_LABEL,
   formatScore,
   formatSeniorityShortOrDash,
-} from '../panel.format';
+} from '../../../core/format';
 
 type ViewState = 'loading' | 'ready' | 'notFound' | 'error';
 
@@ -216,7 +216,7 @@ export class Listing {
   }
 
   protected readonly employment = EMPLOYMENT_SHORT;
-  protected readonly shiftFull = SHIFT_FULL;
+  protected readonly shiftFull = SHIFT_LABELS;
   protected readonly shiftInitial = SHIFT_INITIAL;
   protected readonly shiftOrder = SHIFT_ORDER;
   protected readonly statusBadge = STATUS_BADGE;

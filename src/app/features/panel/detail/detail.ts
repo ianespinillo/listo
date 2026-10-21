@@ -17,7 +17,7 @@ import { PanelApiService, parseApiError } from '../../../core/panel-api.service'
 import {
   EMPLOYMENT_SENTENCE,
   EMPLOYMENT_SHORT,
-  SHIFT_FULL,
+  SHIFT_LABELS,
   SHIFT_ORDER,
   STATUS_BADGE,
   STATUS_LABEL,
@@ -25,11 +25,10 @@ import {
   formatScore,
   formatSeniorityLong,
   formatSeniorityShort,
-} from '../panel.format';
+} from '../../../core/format';
+import { EMAIL_PATTERN } from '../../../core/forms';
 
 type ViewState = 'loading' | 'ready' | 'notFound' | 'error';
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
@@ -320,7 +319,7 @@ export class Detail {
   protected readonly seniorityLong = formatSeniorityLong;
   protected readonly employment = EMPLOYMENT_SHORT;
   protected readonly employmentSentence = EMPLOYMENT_SENTENCE;
-  protected readonly shiftFull = SHIFT_FULL;
+  protected readonly shiftFull = SHIFT_LABELS;
   protected readonly statusBadge = STATUS_BADGE;
   protected readonly statusLabel = STATUS_LABEL;
 }

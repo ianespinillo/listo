@@ -11,8 +11,6 @@ import {
 } from '@angular/core';
 import {
   AbstractControl,
-  FormArray,
-  FormGroup,
   NonNullableFormBuilder,
   ReactiveFormsModule,
   Validators,
@@ -27,16 +25,17 @@ import {
   Shift,
 } from '../../core/public-api.models';
 import { PublicApiService } from '../../core/public-api.service';
-import { PublicHeader } from '../../shared/public-header/public-header';
 import {
   EMPLOYMENT_LABELS,
-  EMPLOYMENT_OPTIONS,
   SHIFT_LABELS,
-  SHIFT_OPTIONS,
   formatDayMonth,
   formatScore,
   formatSeniority,
-} from './registration.labels';
+  todayInBuenosAires,
+} from '../../core/format';
+import { applyServerErrors, errorOf, revalidate } from '../../core/forms';
+import { PublicHeader } from '../../shared/public-header/public-header';
+import { EMPLOYMENT_OPTIONS, SHIFT_OPTIONS } from './registration.labels';
 import {
   atLeastOneShift,
   dniValidator,
@@ -56,8 +55,6 @@ interface SubmitError {
   message: string;
   details: string[];
 }
-
-const TIME_ZONE = 'America/Argentina/Buenos_Aires';
 
 /** Textos de "falta el dato" por campo. */
 const REQUIRED = {
@@ -228,13 +225,7 @@ export class Registration implements OnInit {
   // ---- Errores ----
 
   /** Mensaje de error de un control, o null si no hay que mostrarlo todavía. */
-  protected errorOf(control: AbstractControl | null, requiredText: string): string | null {
-    if (!control || !control.touched || !control.errors) return null;
-    const errors = control.errors;
-    if (typeof errors['server'] === 'string') return errors['server'];
-    if (errors['required']) return requiredText;
-    return typeof errors['message'] === 'string' ? errors['message'] : null;
-  }
+  protected readonly errorOf = errorOf;
 
   protected rowPositionError(index: number): string | null {
     const row = this.applications.at(index);
@@ -282,7 +273,7 @@ export class Registration implements OnInit {
         this.go('mismatch', '');
         break;
       case 'validation': {
-        const details = this.applyServerErrors(result.fields);
+        const details = applyServerErrors(result.fields, (key) => this.controlForServerKey(key));
         this.submitError.set({ message: result.message, details });
         this.focusFirstInvalid();
         break;
@@ -314,24 +305,6 @@ export class Registration implements OnInit {
       })),
       declaration: value.declaration,
     };
-  }
-
-  /**
-   * Pone cada error del servidor en su control. Devuelve los mensajes de las claves que no se pudieron
-   * asociar a ningún control, para mostrarlos en el aviso general.
-   */
-  private applyServerErrors(fields: Record<string, string>): string[] {
-    const unmapped: string[] = [];
-    for (const [key, text] of Object.entries(fields)) {
-      const control = this.controlForServerKey(key);
-      if (control) {
-        control.setErrors({ server: text });
-        control.markAsTouched();
-      } else {
-        unmapped.push(text);
-      }
-    }
-    return unmapped;
   }
 
   private controlForServerKey(key: string): AbstractControl | null {
@@ -444,19 +417,4 @@ export class Registration implements OnInit {
   protected shiftLabel(shift: Shift): string {
     return SHIFT_LABELS[shift];
   }
-}
-
-/** Fecha de hoy ("AAAA-MM-DD") en la zona horaria de la escuela. */
-function todayInBuenosAires(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(new Date());
-}
-
-/** Recalcula la validez de todos los controles, de las hojas hacia la raíz. */
-function revalidate(control: AbstractControl): void {
-  if (control instanceof FormGroup) {
-    Object.values(control.controls).forEach(revalidate);
-  } else if (control instanceof FormArray) {
-    control.controls.forEach(revalidate);
-  }
-  control.updateValueAndValidity({ onlySelf: true });
 }

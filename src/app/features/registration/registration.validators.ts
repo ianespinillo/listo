@@ -1,4 +1,5 @@
 import { FormArray, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { EMAIL_PATTERN } from '../../core/forms';
 
 /**
  * Validadores del formulario público. Replican las reglas del servidor para dar feedback rápido,
@@ -30,7 +31,7 @@ export const dniValidator: ValidatorFn = (control) => {
 export const emailValidator: ValidatorFn = (control) => {
   const value = String(control.value ?? '').trim();
   if (!value) return { required: true };
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? null : message('Ingresá un email válido.');
+  return EMAIL_PATTERN.test(value) ? null : message('Ingresá un email válido.');
 };
 
 export const phoneValidator: ValidatorFn = (control) => {
