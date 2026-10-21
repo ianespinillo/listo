@@ -1,6 +1,7 @@
 // Listo — modelo de datos (Prisma 7 + PostgreSQL)
 // La URL de la base está en prisma.config.ts, no acá.
-// Modelos y campos en español (dominio); tablas, columnas y tipos de la base en inglés (@map / @@map).
+// Modelos, campos y enums en inglés; los valores de enums del decreto quedan en español.
+// Tablas, columnas y tipos de la base en inglés (@map / @@map).
 
 generator client {
   provider        = "prisma-client"
@@ -12,14 +13,14 @@ datasource db {
   provider = "postgresql"
 }
 
-enum TipoPuesto {
+enum PositionType {
   ASIGNATURA
   CARGO
 
   @@map("position_type")
 }
 
-enum SituacionRevista {
+enum EmploymentStatus {
   TITULAR
   PROVISIONAL
   SUPLENTE
@@ -28,7 +29,7 @@ enum SituacionRevista {
   @@map("employment_status")
 }
 
-enum Turno {
+enum Shift {
   MANANA
   TARDE
   VESPERTINO
@@ -36,121 +37,121 @@ enum Turno {
   @@map("shift")
 }
 
-enum TipoEvento {
-  INSCRIPCION
-  CAMBIO_DATOS     // cambió situación de revista o antigüedad
-  CAMBIO_PUNTAJE
-  ALTA_MATERIA
-  BAJA_MATERIA
-  VERIFICACION
-  DESVERIFICACION
-  CAMBIO_EMAIL     // lo hizo la directora desde el panel
-  BAJA
-  REACTIVACION
+enum EventType {
+  REGISTRATION
+  DATA_CHANGE      // cambió situación de revista o antigüedad
+  SCORE_CHANGE
+  POSITION_ADDED
+  POSITION_REMOVED
+  VERIFICATION
+  UNVERIFICATION
+  EMAIL_CHANGE     // lo hizo la directora desde el panel
+  DEACTIVATION
+  REACTIVATION
 
   @@map("event_type")
 }
 
-model Ciclo {
-  id               Int          @id @default(autoincrement())
-  anio             Int          @unique @map("year")
-  inscripcionDesde DateTime     @map("registration_from") @db.Date
-  inscripcionHasta DateTime     @map("registration_until") @db.Date
+model Cycle {
+  id                Int         @id @default(autoincrement())
+  year              Int         @unique
+  registrationFrom  DateTime    @map("registration_from") @db.Date
+  registrationUntil DateTime    @map("registration_until") @db.Date
   // Un solo ciclo activo: índice único parcial cycle_single_active (ver @@unique abajo)
-  activo           Boolean      @default(false) @map("active")
-  creadoEn         DateTime     @default(now()) @map("created_at")
-  postulantes      Postulante[]
+  active            Boolean     @default(false)
+  createdAt         DateTime    @default(now()) @map("created_at")
+  applicants        Applicant[]
 
-  @@unique([activo], map: "cycle_single_active", where: { activo: true })
+  @@unique([active], map: "cycle_single_active", where: { active: true })
   @@map("cycle")
 }
 
-model Puesto {
-  id            Int           @id @default(autoincrement())
-  nombre        String        @unique @map("name")
-  tipo          TipoPuesto    @map("type")
+model Position {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  type         PositionType
   // Un puesto con postulaciones no se borra: se desactiva
-  activo        Boolean       @default(true) @map("active")
-  postulaciones Postulacion[]
-  eventos       Evento[]
+  active       Boolean       @default(true)
+  applications Application[]
+  events       HistoryEvent[]
 
   @@map("position")
 }
 
-model Postulante {
+model Applicant {
   id               Int              @id @default(autoincrement())
-  cicloId          Int              @map("cycle_id")
-  ciclo            Ciclo            @relation(fields: [cicloId], references: [id])
+  cycleId          Int              @map("cycle_id")
+  cycle            Cycle            @relation(fields: [cycleId], references: [id])
   dni              String           // solo dígitos
-  apellido         String           @map("last_name")
-  nombre           String           @map("first_name")
+  lastName         String           @map("last_name")
+  firstName        String           @map("first_name")
   email            String           // normalizado: trim + minúsculas
-  telefono         String           @map("phone")
-  situacionRevista SituacionRevista @map("employment_status")
-  antiguedadMeses  Int              @map("seniority_months")
-  turnos           Turno[]          @map("shifts")
-  dadoDeBaja       Boolean          @default(false) @map("deactivated")
-  creadoEn         DateTime         @default(now()) @map("created_at")
-  actualizadoEn    DateTime         @updatedAt @map("updated_at")
-  postulaciones    Postulacion[]
-  eventos          Evento[]
+  phone            String
+  employmentStatus EmploymentStatus @map("employment_status")
+  seniorityMonths  Int              @map("seniority_months")
+  shifts           Shift[]
+  deactivated      Boolean          @default(false)
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  applications     Application[]
+  events           HistoryEvent[]
 
-  @@unique([cicloId, dni])
-  @@index([cicloId, dadoDeBaja])
+  @@unique([cycleId, dni])
+  @@index([cycleId, deactivated])
   @@map("applicant")
 }
 
-model Postulacion {
-  postulanteId    Int        @map("applicant_id")
-  postulante      Postulante @relation(fields: [postulanteId], references: [id], onDelete: Cascade)
-  puestoId        Int        @map("position_id")
-  puesto          Puesto     @relation(fields: [puestoId], references: [id])
-  puntaje         Decimal    @map("score") @db.Decimal(5, 2)
-  verificado      Boolean    @default(false) @map("verified")
+model Application {
+  applicantId   Int       @map("applicant_id")
+  applicant     Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  positionId    Int       @map("position_id")
+  position      Position  @relation(fields: [positionId], references: [id])
+  score         Decimal   @db.Decimal(5, 2)
+  verified      Boolean   @default(false)
   // true cuando el docente cambió el puntaje después de la última verificación
-  modificado      Boolean    @default(false) @map("modified")
+  modified      Boolean   @default(false)
   // puntaje previo al último cambio; se limpia al verificar
-  puntajeAnterior Decimal?   @map("previous_score") @db.Decimal(5, 2)
-  verificadoEn    DateTime?  @map("verified_at")
+  previousScore Decimal?  @map("previous_score") @db.Decimal(5, 2)
+  verifiedAt    DateTime? @map("verified_at")
 
-  @@id([postulanteId, puestoId])
-  @@index([puestoId])
+  @@id([applicantId, positionId])
+  @@index([positionId])
   @@map("application")
 }
 
-model Evento {
-  id           Int        @id @default(autoincrement())
-  postulanteId Int        @map("applicant_id")
-  postulante   Postulante @relation(fields: [postulanteId], references: [id], onDelete: Cascade)
-  tipo         TipoEvento @map("type")
-  puestoId     Int?       @map("position_id")
-  puesto       Puesto?    @relation(fields: [puestoId], references: [id])
-  // valores anterior/nuevo según el tipo, p. ej. { "anterior": "36.10", "nuevo": "38.45" }
-  detalle      Json?      @map("detail")
-  fecha        DateTime   @default(now()) @map("occurred_at")
+model HistoryEvent {
+  id          Int       @id @default(autoincrement())
+  applicantId Int       @map("applicant_id")
+  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  type        EventType
+  positionId  Int?      @map("position_id")
+  position    Position? @relation(fields: [positionId], references: [id])
+  // valores anterior/nuevo según el tipo, p. ej. { "previous": "36.10", "new": "38.45" }
+  detail      Json?
+  occurredAt  DateTime  @default(now()) @map("occurred_at")
 
-  @@index([postulanteId, fecha])
+  @@index([applicantId, occurredAt])
   @@map("event")
 }
 
 model Admin {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  creadoEn     DateTime @default(now()) @map("created_at")
-  sesiones     Sesion[]
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  sessions     Session[]
 
   @@map("admin")
 }
 
-model Sesion {
+model Session {
   // SHA-256 del token de la cookie; el token en claro nunca se guarda
   tokenHash String   @id @map("token_hash")
   adminId   Int      @map("admin_id")
   admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  expiraEn  DateTime @map("expires_at")
-  creadoEn  DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  @@index([expiraEn])
+  @@index([expiresAt])
   @@map("session")
 }

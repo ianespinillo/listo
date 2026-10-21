@@ -27,15 +27,15 @@ app.get('/api/health', async (_req, res) => {
     res.json({ ok: true });
   } catch {
     res.status(503).json({
-      error: 'BASE_NO_DISPONIBLE',
-      mensaje: 'No se pudo conectar con la base de datos. Intentá de nuevo en unos minutos.',
+      error: 'DATABASE_UNAVAILABLE',
+      message: 'No se pudo conectar con la base de datos. Intentá de nuevo en unos minutos.',
     });
   }
 });
 
 // Cualquier otra ruta /api/* responde JSON y nunca llega a Angular.
 app.use('/api', (_req, res) => {
-  res.status(404).json({ error: 'NO_ENCONTRADO', mensaje: 'No existe el recurso solicitado.' });
+  res.status(404).json({ error: 'NOT_FOUND', message: 'No existe el recurso solicitado.' });
 });
 
 /**

@@ -96,4 +96,4 @@ Enviado, No coincide y Cerrada son **estados del mismo componente** de la ruta `
 Así no se pierde lo cargado si el docente vuelve a revisar sus datos.
 
 Los textos entre corchetes de los mockups (`[número]`, `[distrito]`, `[teléfono o email de la escuela]`,
-`[dominio-de-la-app]`) salen de `GET /api/public/status` (`escuela`) o de la URL actual.
+`[dominio-de-la-app]`) salen de `GET /api/public/status` (`school`) o de la URL actual.

@@ -53,7 +53,7 @@ Una etapa por vez. Al terminar cada una: resumir qué se hizo, cómo probarlo y 
   - Agregar y quitar filas, con mínimo 1.
   - Validador de puestos repetidos.
   - El puntaje acepta coma.
-- Los errores `400` del servidor (`campos`) se muestran junto a cada campo.
+- Los errores `400` del servidor (`fields`) se muestran junto a cada campo.
 - Probar a 390 px de ancho, que es el caso principal.
 
 **Aceptación**:
@@ -62,14 +62,14 @@ Una etapa por vez. Al terminar cada una: resumir qué se hizo, cómo probarlo y 
 
 ## Etapa 4: API del panel
 
-- Login, logout y sesión. Middleware `requiereSesion` para `/api/panel/*`.
+- Login, logout y sesión. Middleware `requireSession` para `/api/panel/*`.
 - `GET /api/panel/listing` con el SQL de `reglas-de-negocio.md` §2.
 - Detalle, edición de email, baja y reactivación, verificación.
 - Puestos y ciclos.
 - Tests:
   - **Todos los casos de orden** de `reglas-de-negocio.md` §2.
-  - Verificación: limpia `modificado` y `puntajeAnterior`.
-  - Rutas sin sesión: `401`.
+  - Verificación: limpia `modified` y `previousScore`.
+  - Rutas sin sesión: `401 UNAUTHENTICATED`.
   - Activar un ciclo desactiva el anterior.
 
 ## Etapa 5: Panel

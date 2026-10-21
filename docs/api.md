@@ -1,17 +1,26 @@
 # API
 
-Todo es JSON. Las fechas sin hora van como `"AAAA-MM-DD"` y los instantes en ISO 8601.
+Todo es JSON. Los identificadores del contrato (campos, códigos de error, variables de entorno,
+cookie) van en inglés; los textos que ve el usuario (`message`) van en español rioplatense.
+Los valores de los enums del decreto quedan en español: `TITULAR`, `PROVISIONAL`, `SUPLENTE`,
+`EXTERNO`, `MANANA`, `TARDE`, `VESPERTINO`, `ASIGNATURA`, `CARGO`.
+
+Las fechas sin hora van como `"AAAA-MM-DD"` y los instantes en ISO 8601.
 Los puntajes van como **string con 2 decimales** (`"38.45"`), para no perder precisión;
 el front los muestra con coma.
 
 Formato de error común:
 
 ```json
-{ "error": "CODIGO", "mensaje": "Texto para mostrar al usuario", "campos": { "dni": "…" } }
+{ "error": "CODE", "message": "Texto para mostrar al usuario", "fields": { "dni": "…" } }
 ```
 
-`campos` aparece solo en los errores de validación (`400 VALIDACION`). Las claves de los
-elementos de la lista se escriben así: `postulaciones.1.puntaje`.
+`fields` aparece solo en los errores de validación (`400 VALIDATION_ERROR`). Las claves de los
+elementos de la lista se escriben así: `applications.1.score`.
+
+Códigos de error: `VALIDATION_ERROR`, `REGISTRATION_CLOSED`, `DATA_MISMATCH`,
+`TOO_MANY_REQUESTS`, `UNAUTHENTICATED`, `INVALID_CREDENTIALS`, `DUPLICATE_POSITION`,
+`CYCLE_ARCHIVED`, `CYCLE_EXISTS`, `NOT_FOUND`, `DATABASE_UNAVAILABLE`.
 
 ---
 
@@ -21,57 +30,57 @@ elementos de la lista se escriben así: `postulaciones.1.puntaje`.
 
 ```json
 {
-  "ciclo": { "anio": 2027, "inscripcionDesde": "2027-02-01", "inscripcionHasta": "2027-02-28" },
-  "abierta": true,
-  "escuela": { "nombre": "E.E.S. N.º …", "contacto": "…" },
-  "puestos": [ { "id": 1, "nombre": "Matemática", "tipo": "ASIGNATURA" } ]
+  "cycle": { "year": 2027, "registrationFrom": "2027-02-01", "registrationUntil": "2027-02-28" },
+  "open": true,
+  "school": { "name": "E.E.S. N.º …", "contact": "…" },
+  "positions": [ { "id": 1, "name": "Matemática", "type": "ASIGNATURA" } ]
 }
 ```
 
-Si no hay ciclo activo: `ciclo: null`, `abierta: false`, `puestos: []`.
-`escuela` sale de las variables de entorno `ESCUELA_NOMBRE` y `ESCUELA_CONTACTO`.
+Si no hay ciclo activo: `cycle: null`, `open: false`, `positions: []`.
+`school` sale de las variables de entorno `SCHOOL_NAME` y `SCHOOL_CONTACT`.
 
 ### `POST /api/public/registration`
 
-Rate limit: **10 envíos por hora por IP**. Si se supera: `429 DEMASIADOS_INTENTOS`.
+Rate limit: **10 envíos por hora por IP**. Si se supera: `429 TOO_MANY_REQUESTS`.
 
 ```json
 {
   "dni": "28.123.456",
-  "apellido": "Pereyra",
-  "nombre": "Laura Inés",
+  "lastName": "Pereyra",
+  "firstName": "Laura Inés",
   "email": "Laura.Pereyra@Ejemplo.com ",
-  "telefono": "11 5544 0921",
-  "situacionRevista": "PROVISIONAL",
-  "antiguedad": { "anios": 9, "meses": 2 },
-  "turnos": ["MANANA", "TARDE"],
-  "postulaciones": [
-    { "puestoId": 1, "puntaje": "38,45" },
-    { "puestoId": 2, "puntaje": "31.20" }
+  "phone": "11 5544 0921",
+  "employmentStatus": "PROVISIONAL",
+  "seniority": { "years": 9, "months": 2 },
+  "shifts": ["MANANA", "TARDE"],
+  "applications": [
+    { "positionId": 1, "score": "38,45" },
+    { "positionId": 2, "score": "31.20" }
   ],
-  "declaracion": true
+  "declaration": true
 }
 ```
 
 | Respuesta | Cuándo |
 |---|---|
-| `201` `{ "resultado": "creada", "resumen": {…} }` | DNI nuevo en el ciclo |
-| `200` `{ "resultado": "reemplazada", "resumen": {…} }` | DNI existente con el mismo email |
-| `400 VALIDACION` | Datos inválidos |
-| `403 INSCRIPCION_CERRADA` | Fuera de fecha o sin ciclo activo |
-| `409 DATOS_NO_COINCIDEN` | DNI existente con otro email, o dado de baja |
-| `429 DEMASIADOS_INTENTOS` | Rate limit |
+| `201` `{ "result": "created", "summary": {…} }` | DNI nuevo en el ciclo |
+| `200` `{ "result": "replaced", "summary": {…} }` | DNI existente con el mismo email |
+| `400 VALIDATION_ERROR` | Datos inválidos |
+| `403 REGISTRATION_CLOSED` | Fuera de fecha o sin ciclo activo |
+| `409 DATA_MISMATCH` | DNI existente con otro email, o dado de baja |
+| `429 TOO_MANY_REQUESTS` | Rate limit |
 
 Mensaje de `409`: "Ya existe una inscripción con ese DNI y los datos no coinciden. Si cambiaste de
 email, comunicate con la escuela."
 
-`resumen`:
+`summary`:
 ```json
 {
-  "apellido": "Pereyra", "nombre": "Laura Inés", "dni": "28123456",
-  "situacionRevista": "PROVISIONAL", "turnos": ["MANANA", "TARDE"],
-  "postulaciones": [ { "puesto": "Matemática", "puntaje": "38.45" } ],
-  "inscripcionHasta": "2027-02-28"
+  "lastName": "Pereyra", "firstName": "Laura Inés", "dni": "28123456",
+  "employmentStatus": "PROVISIONAL", "shifts": ["MANANA", "TARDE"],
+  "applications": [ { "position": "Matemática", "score": "38.45" } ],
+  "registrationUntil": "2027-02-28"
 }
 ```
 
@@ -79,11 +88,11 @@ email, comunicate con la escuela."
 
 ## Panel
 
-Todas las rutas `/api/panel/*`, salvo `login`, requieren sesión. Sin sesión válida: `401 NO_AUTENTICADO`.
+Todas las rutas `/api/panel/*`, salvo `login`, requieren sesión. Sin sesión válida: `401 UNAUTHENTICATED`.
 
 Sesión:
-- Cookie `listo_sesion`: `httpOnly`, `sameSite=lax`, `secure` en producción, 7 días.
-- Se guarda **el hash SHA-256 del token** en la tabla `Sesion`, nunca el token.
+- Cookie `listo_session`: `httpOnly`, `sameSite=lax`, `secure` en producción, 7 días.
+- Se guarda **el hash SHA-256 del token** en la tabla `session` (modelo `Session`), nunca el token.
 
 Las rutas que modifican datos solo aceptan `Content-Type: application/json`, como defensa básica contra CSRF.
 
@@ -91,44 +100,44 @@ Las rutas que modifican datos solo aceptan `Content-Type: application/json`, com
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `POST /api/panel/login` | `{ "email", "password" }` | `204` + cookie · `401 CREDENCIALES_INVALIDAS` · rate limit 5/15 min por IP |
+| `POST /api/panel/login` | `{ "email", "password" }` | `204` + cookie · `401 INVALID_CREDENTIALS` · rate limit 5/15 min por IP |
 | `POST /api/panel/logout` | — | `204`, borra la sesión y la cookie |
 | `GET /api/panel/session` | — | `{ "email": "…" }` o `401` |
 
 ### Listado
 
-`GET /api/panel/listing?puestoId=1&turno=TARDE&soloVerificados=true`
+`GET /api/panel/listing?positionId=1&shift=TARDE&onlyVerified=true`
 
-`turno` y `soloVerificados` son opcionales. Si falta `puestoId`, se usa el primer puesto activo.
+`shift` y `onlyVerified` son opcionales. Si falta `positionId`, se usa el primer puesto activo.
 
 ```json
 {
-  "ciclo": { "id": 3, "anio": 2027, "abierta": false },
-  "puesto": { "id": 1, "nombre": "Matemática", "tipo": "ASIGNATURA" },
-  "resumen": { "total": 8, "verificados": 5, "modificados": 1 },
-  "grupos": [
+  "cycle": { "id": 3, "year": 2027, "open": false },
+  "position": { "id": 1, "name": "Matemática", "type": "ASIGNATURA" },
+  "summary": { "total": 8, "verified": 5, "modified": 1 },
+  "groups": [
     {
-      "grupo": 1,
-      "filas": [
+      "group": 1,
+      "rows": [
         {
-          "orden": 1, "postulanteId": 12,
-          "apellido": "Gómez", "nombre": "Mariana", "dni": "22481903",
-          "situacionRevista": "TITULAR", "antiguedadMeses": 256,
-          "puntaje": "44.10", "turnos": ["MANANA", "TARDE"],
-          "estado": "VERIFICADO", "telefono": "11 4021 3387"
+          "order": 1, "applicantId": 12,
+          "lastName": "Gómez", "firstName": "Mariana", "dni": "22481903",
+          "employmentStatus": "TITULAR", "seniorityMonths": 256,
+          "score": "44.10", "shifts": ["MANANA", "TARDE"],
+          "status": "VERIFIED", "phone": "11 4021 3387"
         }
       ]
     },
-    { "grupo": 2, "filas": [] },
-    { "grupo": 3, "filas": [] }
+    { "group": 2, "rows": [] },
+    { "group": 3, "rows": [] }
   ]
 }
 ```
 
-`estado`:
-- `VERIFICADO` si `verificado`.
-- `MODIFICADO` si no está verificado y `modificado` es true.
-- `SIN_VERIFICAR` en el resto de los casos.
+`status`:
+- `VERIFIED` si `verified`.
+- `MODIFIED` si no está verificado y `modified` es true.
+- `UNVERIFIED` en el resto de los casos.
 
 Siempre vienen los 3 grupos, aunque estén vacíos.
 
@@ -136,26 +145,30 @@ Siempre vienen los 3 grupos, aunque estén vacíos.
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `GET /api/panel/applicants/:id` | — | datos + `postulaciones[]` (puesto, puntaje, puntajeAnterior, estado) + `historial[]` (fecha, tipo, puesto, detalle) |
+| `GET /api/panel/applicants/:id` | — | datos + `applications[]` (`position`, `score`, `previousScore`, `status`) + `history[]` (`date`, `type`, `position`, `detail`) |
 | `PATCH /api/panel/applicants/:id` | `{ "email" }` | `200` con el postulante (el email no es único entre postulantes) |
-| `POST /api/panel/applicants/:id/deactivate` | — | `204` · historial `BAJA` |
-| `POST /api/panel/applicants/:id/reactivate` | — | `204` · historial `REACTIVACION` |
-| `PUT /api/panel/applicants/:id/applications/:positionId/verification` | `{ "verificado": true }` | `200` con la postulación |
+| `POST /api/panel/applicants/:id/deactivate` | — | `204` · historial `DEACTIVATION` |
+| `POST /api/panel/applicants/:id/reactivate` | — | `204` · historial `REACTIVATION` |
+| `PUT /api/panel/applicants/:id/applications/:positionId/verification` | `{ "verified": true }` | `200` con la postulación |
 
-Editar el email registra `CAMBIO_EMAIL` en el historial. El `detalle` no guarda el email anterior.
+Editar el email registra `EMAIL_CHANGE` en el historial. El `detail` no guarda el email anterior.
+
+Tipos de historial (`EventType`): `REGISTRATION`, `DATA_CHANGE`, `SCORE_CHANGE`,
+`POSITION_ADDED`, `POSITION_REMOVED`, `VERIFICATION`, `UNVERIFICATION`, `EMAIL_CHANGE`,
+`DEACTIVATION`, `REACTIVATION`.
 
 ### Puestos
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
-| `GET /api/panel/positions` | — | `[{ id, nombre, tipo, activo, postulantesCicloActivo }]` |
-| `POST /api/panel/positions` | `{ "nombre", "tipo" }` | `201` · `409 PUESTO_DUPLICADO` |
-| `PATCH /api/panel/positions/:id` | `{ "nombre"?, "tipo"?, "activo"? }` | `200` · `409 PUESTO_DUPLICADO` |
+| `GET /api/panel/positions` | — | `[{ id, name, type, active, activeCycleApplicants }]` |
+| `POST /api/panel/positions` | `{ "name", "type" }` | `201` · `409 DUPLICATE_POSITION` |
+| `PATCH /api/panel/positions/:id` | `{ "name"?, "type"?, "active"? }` | `200` · `409 DUPLICATE_POSITION` |
 
 ### Ciclos
 
 | Método y ruta | Cuerpo | Respuesta |
 |---|---|---|
 | `GET /api/panel/cycles` | — | lista, con el activo primero |
-| `PATCH /api/panel/cycles/:id` | `{ "inscripcionDesde", "inscripcionHasta" }` | `200` · `400` si desde > hasta · `409 CICLO_ARCHIVADO` |
-| `POST /api/panel/cycles` | `{ "anio", "inscripcionDesde", "inscripcionHasta" }` | `201`: crea el ciclo y lo deja activo (desactiva el anterior) · `409 CICLO_EXISTENTE` |
+| `PATCH /api/panel/cycles/:id` | `{ "registrationFrom", "registrationUntil" }` | `200` · `400` si desde > hasta · `409 CYCLE_ARCHIVED` |
+| `POST /api/panel/cycles` | `{ "year", "registrationFrom", "registrationUntil" }` | `201`: crea el ciclo y lo deja activo (desactiva el anterior) · `409 CYCLE_EXISTS` |

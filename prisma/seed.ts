@@ -2,24 +2,24 @@
 // Se ejecuta con `pnpm db:seed`.
 import { prisma } from '../src/server/db';
 import { todayInBuenosAires, addDays } from '../src/server/domain/dates';
-import { TipoPuesto } from '../src/server/generated/prisma/client';
+import { PositionType } from '../src/server/generated/prisma/client';
 
-const POSITIONS: { nombre: string; tipo: TipoPuesto }[] = [
-  { nombre: 'Matemática', tipo: 'ASIGNATURA' },
-  { nombre: 'Física', tipo: 'ASIGNATURA' },
-  { nombre: 'Química', tipo: 'ASIGNATURA' },
-  { nombre: 'Biología', tipo: 'ASIGNATURA' },
-  { nombre: 'Prácticas del Lenguaje', tipo: 'ASIGNATURA' },
-  { nombre: 'Historia', tipo: 'ASIGNATURA' },
-  { nombre: 'Geografía', tipo: 'ASIGNATURA' },
-  { nombre: 'Inglés', tipo: 'ASIGNATURA' },
-  { nombre: 'Construcción de Ciudadanía', tipo: 'ASIGNATURA' },
-  { nombre: 'Educación Física', tipo: 'ASIGNATURA' },
-  { nombre: 'Preceptor/a', tipo: 'CARGO' },
+const POSITIONS: { name: string; type: PositionType }[] = [
+  { name: 'Matemática', type: 'ASIGNATURA' },
+  { name: 'Física', type: 'ASIGNATURA' },
+  { name: 'Química', type: 'ASIGNATURA' },
+  { name: 'Biología', type: 'ASIGNATURA' },
+  { name: 'Prácticas del Lenguaje', type: 'ASIGNATURA' },
+  { name: 'Historia', type: 'ASIGNATURA' },
+  { name: 'Geografía', type: 'ASIGNATURA' },
+  { name: 'Inglés', type: 'ASIGNATURA' },
+  { name: 'Construcción de Ciudadanía', type: 'ASIGNATURA' },
+  { name: 'Educación Física', type: 'ASIGNATURA' },
+  { name: 'Preceptor/a', type: 'CARGO' },
 ];
 
 // Guarda la fecha exacta en columnas @db.Date (medianoche UTC).
-const asDate = (fecha: string) => new Date(`${fecha}T00:00:00Z`);
+const asDate = (date: string) => new Date(`${date}T00:00:00Z`);
 
 async function main() {
   const today = todayInBuenosAires();
@@ -28,19 +28,19 @@ async function main() {
   const until = addDays(today, 29);
 
   await prisma.$transaction(async (tx) => {
-    await tx.ciclo.updateMany({ where: { anio: { not: year }, activo: true }, data: { activo: false } });
-    await tx.ciclo.upsert({
-      where: { anio: year },
-      create: { anio: year, inscripcionDesde: asDate(from), inscripcionHasta: asDate(until), activo: true },
-      update: { inscripcionDesde: asDate(from), inscripcionHasta: asDate(until), activo: true },
+    await tx.cycle.updateMany({ where: { year: { not: year }, active: true }, data: { active: false } });
+    await tx.cycle.upsert({
+      where: { year },
+      create: { year, registrationFrom: asDate(from), registrationUntil: asDate(until), active: true },
+      update: { registrationFrom: asDate(from), registrationUntil: asDate(until), active: true },
     });
   });
 
   for (const position of POSITIONS) {
-    await prisma.puesto.upsert({
-      where: { nombre: position.nombre },
+    await prisma.position.upsert({
+      where: { name: position.name },
       create: position,
-      update: { tipo: position.tipo },
+      update: { type: position.type },
     });
   }
 

@@ -16,11 +16,14 @@ Tiene dos partes:
   Las rutas del navegador también (`/panel/ingresar`, `/panel/configuracion`), porque las ve la gente.
 - **Endpoints de la API, nombres de archivos y carpetas, y el esquema de la base (tablas, columnas,
   tipos e índices) van en inglés** (`/api/public/registration`, `domain/normalize.ts`,
-  `features/registration/`, tabla `applicant`). Los modelos y campos de Prisma quedan en español y
-  se mapean con `@map` / `@@map`.
-- Comentarios de código, mensajes de commit y nombres de dominio en el código van en español
-  (`postulante`, `postulacion`, `puesto`, `ciclo`). Los campos del JSON y los códigos de error de la
-  API también. Los términos técnicos estándar (`service`, `guard`, `route`) quedan como son.
+  `features/registration/`, tabla `applicant`). Los modelos y campos de Prisma, los campos JSON de
+  la API, los códigos de error y las variables de entorno también van en inglés (`Applicant`,
+  `employmentStatus`, `VALIDATION_ERROR`, `SCHOOL_NAME`) y se mapean con `@map` / `@@map`. Los valores
+  de enum del decreto quedan en español (`TITULAR`, `PROVISIONAL`, `SUPLENTE`, `EXTERNO`, `MANANA`,
+  `TARDE`, `VESPERTINO`, `ASIGNATURA`, `CARGO`) y los textos legibles del `message` también.
+- **El código va en inglés**: variables, funciones, clases, constantes y tipos
+  (`todayInBuenosAires`, `addDays`, `BCRYPT_COST`).
+- Comentarios de código, mensajes de consola y mensajes de commit van en español.
 - **Gestor de paquetes: pnpm.** Nunca npm ni npx (usar `pnpm`, `pnpm exec`, `pnpm dlx`).
 
 ## Documentación (leela antes de implementar)
@@ -54,7 +57,7 @@ hiciste y esperá confirmación antes de seguir.
   - Cliente instanciado con el adapter `@prisma/adapter-pg`.
   - El ordenamiento del decreto se hace con `$queryRaw` (SQL en `docs/reglas-de-negocio.md`).
 - **Validación**: zod en el servidor. El front valida para dar feedback, pero la regla vale en el servidor.
-- **Auth del panel**: una sola usuaria. Tabla `Admin` con hash bcryptjs, sesión en tabla `Sesion`
+- **Auth del panel**: una sola usuaria. Tabla `Admin` con hash bcryptjs, sesión en tabla `Session`
   y cookie `httpOnly`.
 - **Tests**: Vitest para la lógica del servidor (orden, reemplazo, validaciones) contra una base de prueba.
 - **Estilos**: CSS plano con variables (tokens en `docs/diseno.md`). Sin Tailwind ni librería de componentes.
