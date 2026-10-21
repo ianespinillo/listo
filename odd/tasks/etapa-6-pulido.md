@@ -32,6 +32,12 @@
 - README en español: local, scripts, tests, despliegue, variables, admin, backups y pendientes del §7.
 - Verificador de la Etapa 5: sin bloqueantes; 2 should-fix y 4 nits, todos corregidos (T4).
 - Checks finales del coordinador: `pnpm build` OK sin warnings; `pnpm test` 145/145.
+- **Review nativo (Gentle AI)**: riesgo alto (auth en `panel-auth.guard.ts`), concedido por el usuario. 4 lentes (risk, resilience, readability, reliability) → **aprobado**, sin hallazgos bloqueantes; confirmado (`review-4b4f994e966726af`, autoridad consumida).
+- **Hallazgos informativos del review (trabajo posterior, no bloquean)**:
+  - El aviso "Se guardó, pero no pudimos actualizar la lista" nunca se limpia (`settings.ts`), marcado por 3 lentes.
+  - Carga duplicada en `detail.ts` (constructor + `load()`).
+  - Chequeo redundante de `/panel` en `safeReturnUrl`.
+  - Sin tests de front para logout, `returnUrl`, detalle y listado.
 - **Pendiente manual**: recorrido con teclado y foco sobre el header verde; lector de pantalla en diálogos; mirar el borde nuevo de los campos.
 
 ## Mirror Engram
