@@ -17,10 +17,12 @@ const angularApp = new AngularNodeAppEngine();
 
 /**
  * Detrás de un proxy (nginx, PM2 + proxy) hay que decir cuántos saltos confiar para que el rate
- * limit vea la IP real. TRUST_PROXY: vacío = apagado, número = cantidad de saltos, "true" = confiar.
+ * limit vea la IP real. TRUST_PROXY: vacío o "false" = apagado, número = cantidad de saltos
+ * (recomendado), "true" = confiar en cualquier X-Forwarded-For (permite falsear la IP), o una
+ * lista de IPs/subredes de proxies.
  */
-const trustProxy = process.env['TRUST_PROXY']?.trim();
-if (trustProxy) {
+const trustProxy = process.env['TRUST_PROXY']?.trim().toLowerCase();
+if (trustProxy && trustProxy !== 'false') {
   app.set('trust proxy', trustProxy === 'true' ? true : /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
 }
 
