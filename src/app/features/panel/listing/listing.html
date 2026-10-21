@@ -1,0 +1,189 @@
+@let current = data();
+
+<div class="p-head">
+  <div class="p-head-text">
+    <h1 class="p-title" tabindex="-1">{{ current?.position?.name ?? 'Listado' }}</h1>
+    @if (state() === 'ready' && current && current.cycle) {
+      <p class="p-sub" role="status" aria-live="polite">
+        {{ plural(current.summary.total, 'postulante', 'postulantes') }} ·
+        {{ plural(current.summary.verified, 'verificado', 'verificados') }} ·
+        {{ current.summary.modified }} con puntaje modificado
+      </p>
+    }
+  </div>
+  @if (state() === 'ready' && current?.cycle && current?.position) {
+    <button type="button" class="pbtn pbtn-brand no-print" (click)="print()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 15h10v6H7z"></path></svg>
+      Imprimir listado
+    </button>
+  }
+</div>
+
+@if (current?.cycle && current?.position) {
+  <p class="print-only">
+    Listado institucional · Ciclo {{ current?.cycle?.year }}
+    @if (ctx.schoolName()) {
+      · {{ ctx.schoolName() }}
+    }
+    @if (filters().shift) {
+      · Turno {{ shiftFull[filters().shift!] }}
+    }
+    @if (filters().onlyVerified) {
+      · Solo verificados
+    }
+  </p>
+}
+
+<form class="filters p-card no-print" (submit)="$event.preventDefault()" aria-label="Filtros del listado">
+  <div class="field filter-position">
+    <label for="fl-puesto">Materia o cargo</label>
+    <select id="fl-puesto" class="input" (change)="onPosition($event)">
+      @if (selectedPositionId() === null) {
+        <option value="" selected disabled>Elegí una materia o cargo</option>
+      }
+      @for (position of positions(); track position.id) {
+        <option [value]="position.id" [selected]="position.id === selectedPositionId()">
+          {{ position.name }}{{ position.type === 'CARGO' ? ' (cargo)' : '' }}{{ position.active ? '' : ' (inactivo)' }}
+        </option>
+      }
+    </select>
+    @if (positionsFailed()) {
+      <p class="error" role="alert">No pudimos cargar la lista de materias.</p>
+    }
+  </div>
+
+  <fieldset class="filter-shift">
+    <legend>Turno</legend>
+    <div class="pills">
+      @for (option of shiftFilters; track option.label) {
+        <button
+          type="button"
+          class="pill"
+          [attr.aria-pressed]="filters().shift === option.value"
+          (click)="onShift(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </div>
+  </fieldset>
+
+  <label class="p-check">
+    <input type="checkbox" [checked]="filters().onlyVerified" (change)="onOnlyVerified($event)" />
+    Solo verificados
+  </label>
+</form>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="p-state" role="status">Cargando el listado…</p>
+  }
+  @case ('error') {
+    <div class="p-state" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="pbtn pbtn-outline retry" (click)="retry()">Reintentar</button>
+    </div>
+  }
+  @case ('notFound') {
+    <p class="p-state" role="alert">
+      No encontramos esa materia o cargo. Elegí otra en el filtro.
+    </p>
+  }
+  @case ('ready') {
+    @if (current && !current.cycle) {
+      <p class="p-state">
+        No hay un ciclo activo, así que todavía no hay listado.
+        <a routerLink="/panel/configuracion">Abrí un ciclo desde Ciclo y puestos</a>.
+      </p>
+    } @else if (current && !current.position) {
+      <p class="p-state">
+        Todavía no hay materias o cargos activos.
+        <a routerLink="/panel/configuracion">Agregá uno desde Ciclo y puestos</a>.
+      </p>
+    } @else {
+      <p class="rule-note">
+        Orden según art. 108 C del Decreto 2485/92, texto del Decreto 900/23. El número de orden es a quién
+        ofrecer primero.
+      </p>
+
+      @for (group of groups(); track trackGroup(group)) {
+        <section class="group" [class.is-busy]="busy()" [attr.aria-busy]="busy()" [attr.aria-labelledby]="'g-title-' + group.group">
+          <div class="group-head">
+            <span [class]="'circle g' + group.group" aria-hidden="true">{{ group.group }}</span>
+            <h2 class="p-h2" [id]="'g-title-' + group.group">
+              <span class="visually-hidden">Grupo {{ group.group }}: </span>{{ group.info.title }}
+            </h2>
+            <span class="rule">{{ group.info.rule }}</span>
+          </div>
+
+          @if (group.rows.length === 0) {
+            <p class="p-state">
+              {{
+                hasFilters()
+                  ? 'Ningún postulante de este grupo coincide con los filtros.'
+                  : 'Todavía no hay postulantes en este grupo.'
+              }}
+            </p>
+          } @else {
+            <div class="p-table-wrap">
+              <table class="p-table listing-table">
+                <caption class="visually-hidden">
+                  Grupo {{ group.group }}: {{ group.info.title }}. {{ group.info.rule }}.
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Orden</th>
+                    <th scope="col">Docente</th>
+                    <th scope="col">Situación</th>
+                    <th scope="col">Antigüedad</th>
+                    <th scope="col">Puntaje</th>
+                    <th scope="col">Turnos</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Teléfono</th>
+                    <th scope="col" class="no-print"><span class="visually-hidden">Acciones</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of group.rows; track row.applicantId) {
+                    <tr>
+                      <td class="num order">{{ row.order }}</td>
+                      <td>
+                        <span class="name">{{ fullName(row) }}</span>
+                        <span class="num dni">DNI {{ row.dni }}</span>
+                      </td>
+                      <td>{{ employment[row.employmentStatus] }}</td>
+                      <td class="num" [class.hl]="group.group === 1">{{ seniority(row.seniorityMonths) }}</td>
+                      <td class="num score" [class.hl]="group.group !== 1">{{ score(row.score) }}</td>
+                      <td>
+                        <span class="shifts">
+                          @for (shift of shiftOrder; track shift) {
+                            @if (row.shifts.includes(shift)) {
+                              <span class="shift" role="img" [attr.aria-label]="shiftFull[shift]" [title]="shiftFull[shift]">{{ shiftInitial[shift] }}</span>
+                            }
+                          }
+                        </span>
+                      </td>
+                      <td>
+                        <span [class]="statusBadge[row.status]">{{ statusLabel[row.status] }}</span>
+                      </td>
+                      <td class="num phone">{{ row.phone }}</td>
+                      <td class="no-print action">
+                        <a
+                          class="pbtn pbtn-outline see"
+                          [routerLink]="['/panel/postulantes', row.applicantId]"
+                          [queryParams]="detailQuery()"
+                          [attr.aria-label]="'Ver a ' + fullName(row)"
+                          >Ver</a
+                        >
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+      }
+    }
+  }
+}

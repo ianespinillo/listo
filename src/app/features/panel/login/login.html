@@ -1,0 +1,68 @@
+<div class="login">
+  <aside class="login-side">
+    <div class="brand">
+      <app-logo [size]="44" [inverted]="true" [label]="null" />
+      <span class="wordmark">Listo<span class="dot">.</span></span>
+    </div>
+    <div class="pitch">
+      <h1>El listado de tu escuela, ya ordenado.</h1>
+      <p>
+        Elegís la materia y el turno; Listo te muestra a quién ofrecerle la suplencia según el orden del
+        Decreto 900/23.
+      </p>
+    </div>
+    @if (schoolName()) {
+      <span class="school">{{ schoolName() }}</span>
+    }
+  </aside>
+
+  <main class="login-main">
+    <form class="login-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="intro">
+        <h2>Ingresar al panel</h2>
+        <p>Acceso solo para la dirección de la escuela.</p>
+      </div>
+
+      @if (formError()) {
+        <p class="alert" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="field">
+        <label for="l-email">Email</label>
+        <input
+          id="l-email"
+          class="input"
+          type="email"
+          formControlName="email"
+          autocomplete="username"
+          placeholder="direccion@ejemplo.com"
+          [attr.aria-invalid]="showRequired('email') ? 'true' : null"
+          [attr.aria-describedby]="showRequired('email') ? 'l-email-error' : null"
+        />
+        @if (showRequired('email')) {
+          <p class="error" id="l-email-error">Ingresá tu email.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="l-pass">Contraseña</label>
+        <input
+          id="l-pass"
+          class="input"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          [attr.aria-invalid]="showRequired('password') ? 'true' : null"
+          [attr.aria-describedby]="showRequired('password') ? 'l-pass-error' : null"
+        />
+        @if (showRequired('password')) {
+          <p class="error" id="l-pass-error">Ingresá tu contraseña.</p>
+        }
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="sending()">
+        {{ sending() ? 'Ingresando…' : 'Ingresar' }}
+      </button>
+    </form>
+  </main>
+</div>
