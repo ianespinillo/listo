@@ -7,18 +7,18 @@
 
 @switch (state()) {
   @case ('loading') {
-    <p class="p-state" role="status">Cargando el postulante…</p>
+    <p class="state-box" role="status">Cargando el postulante…</p>
   }
   @case ('error') {
-    <div class="p-state" role="alert">
+    <div class="state-box" role="alert">
       <p>{{ errorMessage() }}</p>
-      <button type="button" class="pbtn pbtn-outline retry" (click)="load()">Reintentar</button>
+      <button type="button" class="btn btn-sm btn-outline retry" (click)="load()">Reintentar</button>
     </div>
   }
   @case ('notFound') {
-    <div class="p-state" role="alert">
+    <div class="state-box" role="alert">
       <p>No encontramos a ese postulante. Puede que el enlace sea viejo.</p>
-      <a class="pbtn pbtn-outline retry" routerLink="/panel">Ir al listado</a>
+      <a class="btn btn-sm btn-outline retry" routerLink="/panel">Ir al listado</a>
     </div>
   }
   @case ('ready') {
@@ -35,20 +35,20 @@
             }
           </p>
         </div>
-        <div class="p-actions no-print">
-          <button type="button" class="pbtn pbtn-outline" (click)="openEmail()">Editar email</button>
+        <div class="actions no-print">
+          <button type="button" class="btn btn-sm btn-outline" (click)="openEmail()">Editar email</button>
           @if (a.deactivated) {
-            <button type="button" class="pbtn pbtn-primary" [disabled]="acting()" (click)="reactivate()">
+            <button type="button" class="btn btn-sm btn-primary" [disabled]="acting()" (click)="reactivate()">
               Reactivar
             </button>
           } @else {
-            <button type="button" class="pbtn pbtn-danger" (click)="openDeactivate()">Dar de baja</button>
+            <button type="button" class="btn btn-sm btn-danger" (click)="openDeactivate()">Dar de baja</button>
           }
         </div>
       </div>
 
       @if (a.deactivated) {
-        <p class="notice notice-warn" role="note">
+        <p class="alert alert-warn" role="note">
           Este postulante está dado de baja: no aparece en el listado ni en el orden de ninguna materia.
           Podés reactivarlo cuando quieras.
         </p>
@@ -58,7 +58,7 @@
       }
 
       <div class="layout">
-        <section class="p-card data" aria-labelledby="h-data">
+        <section class="card card-stack data" aria-labelledby="h-data">
           <h2 class="p-h2" id="h-data">Datos</h2>
           <dl>
             <div><dt>DNI</dt><dd class="num">{{ a.dni }}</dd></div>
@@ -85,13 +85,13 @@
         </section>
 
         <div class="right">
-          <section class="p-card apps" aria-labelledby="h-apps">
+          <section class="card card-stack apps" aria-labelledby="h-apps">
             <div class="apps-head">
               <h2 class="p-h2" id="h-apps">Postulaciones</h2>
               <p class="p-sub">Verificá cada puntaje contra el Listado Oficial del distrito.</p>
             </div>
             @if (a.applications.length === 0) {
-              <p class="p-state">Este postulante no tiene postulaciones.</p>
+              <p class="state-box">Este postulante no tiene postulaciones.</p>
             } @else {
               <div class="p-table-wrap" tabindex="0" role="region" aria-label="Tabla de postulaciones">
                 <table class="p-table apps-table">
@@ -126,9 +126,9 @@
                         <td class="right-align no-print">
                           <button
                             type="button"
-                            class="pbtn"
-                            [class.pbtn-primary]="app.status !== 'VERIFIED'"
-                            [class.pbtn-outline]="app.status === 'VERIFIED'"
+                            class="btn btn-sm"
+                            [class.btn-primary]="app.status !== 'VERIFIED'"
+                            [class.btn-outline]="app.status === 'VERIFIED'"
                             [disabled]="verifying() !== null"
                             (click)="toggleVerification(app)"
                           >
@@ -144,7 +144,7 @@
             }
           </section>
 
-          <section class="p-card" aria-labelledby="h-hist">
+          <section class="card card-stack" aria-labelledby="h-hist">
             <h2 class="p-h2" id="h-hist">Historial</h2>
             <ol class="history">
               @for (event of a.history; track $index) {
@@ -203,8 +203,8 @@
   }
 }
 
-<dialog #emailDialog class="p-dialog" aria-labelledby="d-email-title">
-  <form class="p-dialog-body" (submit)="$event.preventDefault(); saveEmail()" novalidate>
+<dialog #emailDialog class="dialog" aria-labelledby="d-email-title">
+  <form class="dialog-body" (submit)="$event.preventDefault(); saveEmail()" novalidate>
     <h2 class="p-h2" id="d-email-title">Editar email</h2>
     <p class="p-sub">Usalo cuando el docente cambió de email y no puede reemplazar su inscripción.</p>
     <div class="field">
@@ -222,17 +222,17 @@
         <p class="error" id="d-email-error" role="alert">{{ emailError() }}</p>
       }
     </div>
-    <div class="p-actions">
-      <button type="button" class="pbtn pbtn-outline" (click)="closeEmail()">Cancelar</button>
-      <button type="submit" class="pbtn pbtn-primary" [disabled]="emailSending()">
+    <div class="actions">
+      <button type="button" class="btn btn-sm btn-outline" (click)="closeEmail()">Cancelar</button>
+      <button type="submit" class="btn btn-sm btn-primary" [disabled]="emailSending()">
         {{ emailSending() ? 'Guardando…' : 'Guardar email' }}
       </button>
     </div>
   </form>
 </dialog>
 
-<dialog #deactivateDialog class="p-dialog" aria-labelledby="d-baja-title" aria-describedby="d-baja-text">
-  <div class="p-dialog-body">
+<dialog #deactivateDialog class="dialog" aria-labelledby="d-baja-title" aria-describedby="d-baja-text">
+  <div class="dialog-body">
     <h2 class="p-h2" id="d-baja-title">Dar de baja a {{ fullName() }}</h2>
     <p id="d-baja-text">
       Va a dejar de aparecer en el listado de todas las materias. No se borra nada: podés reactivarlo
@@ -241,9 +241,9 @@
     @if (deactivateError()) {
       <p class="alert" role="alert">{{ deactivateError() }}</p>
     }
-    <div class="p-actions">
-      <button type="button" class="pbtn pbtn-outline" (click)="closeDeactivate()">Cancelar</button>
-      <button type="button" class="pbtn pbtn-danger is-solid" [disabled]="acting()" (click)="deactivate()">
+    <div class="actions">
+      <button type="button" class="btn btn-sm btn-outline" (click)="closeDeactivate()">Cancelar</button>
+      <button type="button" class="btn btn-sm btn-danger is-solid" [disabled]="acting()" (click)="deactivate()">
         {{ acting() ? 'Dando de baja…' : 'Dar de baja' }}
       </button>
     </div>

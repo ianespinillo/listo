@@ -118,6 +118,14 @@ select {
   padding: 20px 18px;
 }
 
+/* Tarjeta del panel: apila su contenido con aire. Se suma a .card. */
+.card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -136,6 +144,30 @@ select {
   color: var(--ok-texto);
 }
 
+.badge-mod {
+  background: var(--mod-fondo);
+  color: var(--mod-texto);
+}
+
+.badge-error {
+  background: var(--error-fondo);
+  color: var(--error-texto);
+}
+
+.badge-cargo {
+  background: var(--tiza);
+  color: var(--tinta);
+}
+
+.badge-asig {
+  background: var(--pizarron-suave);
+  color: var(--pizarron);
+}
+
+/*
+ * Botones. .btn es el grande del sitio público (52 px); .btn-sm es el compacto del panel (44 px).
+ * Variantes: -primary (relleno verde), -brand (borde verde), -outline (borde gris), -danger, -icon.
+ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -145,31 +177,74 @@ select {
   padding: 0 20px;
   border: 1.5px solid transparent;
   border-radius: var(--radio-m);
+  background: var(--superficie);
+  color: var(--tinta);
   font-size: 16px;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
 }
 
+.btn-sm {
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
 .btn-primary {
   background: var(--pizarron);
+  border-color: var(--pizarron);
   color: #fff;
 }
 
-.btn-primary:hover {
-  background: var(--pizarron-hover);
-  color: #fff;
+.btn-brand {
+  border-color: var(--pizarron);
+  color: var(--pizarron);
 }
 
 .btn-outline {
-  background: var(--superficie);
-  border-color: var(--pizarron);
-  color: var(--pizarron);
+  border-color: var(--borde-input);
+}
+
+.btn-danger {
+  border-color: #d9b4ae;
+  color: var(--error-texto);
+}
+
+.btn-icon {
+  width: 44px;
+  padding: 0;
+  border-color: var(--borde);
 }
 
 .btn:disabled {
   opacity: 0.65;
   cursor: progress;
+}
+
+/* Hover: el orden importa (los de abajo ganan a los de arriba, misma especificidad). */
+.btn-sm:hover {
+  color: var(--tinta);
+  border-color: var(--texto-3);
+}
+
+.btn-primary:hover {
+  background: var(--pizarron-hover);
+  border-color: var(--pizarron-hover);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  color: var(--error-texto);
+  border-color: var(--error-borde);
+}
+
+.btn-danger.is-solid {
+  background: var(--error-texto);
+  border-color: var(--error-texto);
+  color: #fff;
 }
 
 .field {
@@ -228,4 +303,76 @@ select {
   color: var(--error-texto);
   font-size: 14px;
   font-weight: 600;
+}
+
+/* Variantes: sin sufijo es de error; -ok confirma, -warn avisa, -info informa. */
+.alert-ok {
+  background: var(--ok-fondo);
+  color: var(--ok-texto);
+}
+
+.alert-warn {
+  background: var(--mod-fondo);
+  color: var(--mod-texto);
+}
+
+.alert-info {
+  background: var(--neutro-fondo);
+  color: var(--neutro-texto);
+}
+
+/* Estado vacío, de carga o de error de una pantalla. */
+.state-box {
+  padding: 28px 20px;
+  border: 1px dashed var(--borde-input);
+  border-radius: var(--radio-m);
+  background: var(--superficie);
+  color: var(--texto-2);
+  text-align: center;
+}
+
+/* Fila de botones de una tarjeta o de un diálogo. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Casilla con texto, de 44 px de alto. */
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.check input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--pizarron);
+}
+
+/* Diálogos nativos (<dialog>). */
+.dialog {
+  width: min(460px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-l);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+
+.dialog::backdrop {
+  background: rgb(23 33 27 / 55%);
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 20px;
 }

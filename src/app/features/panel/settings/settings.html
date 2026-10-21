@@ -3,23 +3,23 @@
 <p class="visually-hidden" role="status" aria-live="polite">{{ announcement() }}</p>
 
 @if (staleNotice()) {
-  <p class="notice notice-warn" role="status">{{ staleNotice() }}</p>
+  <p class="alert alert-warn" role="status">{{ staleNotice() }}</p>
 }
 
 @switch (state()) {
   @case ('loading') {
-    <p class="p-state" role="status">Cargando…</p>
+    <p class="state-box" role="status">Cargando…</p>
   }
   @case ('error') {
-    <div class="p-state" role="alert">
+    <div class="state-box" role="alert">
       <p>{{ errorMessage() }}</p>
-      <button type="button" class="pbtn pbtn-outline retry" (click)="load()">Reintentar</button>
+      <button type="button" class="btn btn-sm btn-outline retry" (click)="load()">Reintentar</button>
     </div>
   }
   @case ('ready') {
     <div class="columns">
       <div class="left">
-        <section class="p-card" aria-labelledby="h-ciclo">
+        <section class="card card-stack" aria-labelledby="h-ciclo">
           @if (activeCycle(); as cycle) {
             <div class="card-head">
               <h2 class="p-h2 big" id="h-ciclo">Ciclo lectivo {{ cycle.year }}</h2>
@@ -67,13 +67,13 @@
                 <p class="alert" role="alert">{{ datesErrors().general }}</p>
               }
               @if (datesSaved()) {
-                <p class="notice" role="status">Fechas guardadas.</p>
+                <p class="alert alert-ok" role="status">Fechas guardadas.</p>
               }
-              <div class="p-actions">
-                <button type="submit" class="pbtn pbtn-primary" [disabled]="datesSaving()">
+              <div class="actions">
+                <button type="submit" class="btn btn-sm btn-primary" [disabled]="datesSaving()">
                   {{ datesSaving() ? 'Guardando…' : 'Guardar fechas' }}
                 </button>
-                <button type="button" class="pbtn pbtn-outline" (click)="openArchive()">
+                <button type="button" class="btn btn-sm btn-outline" (click)="openArchive()">
                   Archivar ciclo y abrir {{ nextYear() }}
                 </button>
               </div>
@@ -81,15 +81,15 @@
           } @else {
             <h2 class="p-h2 big" id="h-ciclo">Ciclo lectivo</h2>
             <p>No hay un ciclo activo. Sin ciclo, el formulario público está cerrado.</p>
-            <div class="p-actions">
-              <button type="button" class="pbtn pbtn-primary" (click)="openArchive()">
+            <div class="actions">
+              <button type="button" class="btn btn-sm btn-primary" (click)="openArchive()">
                 Abrir el ciclo {{ nextYear() }}
               </button>
             </div>
           }
         </section>
 
-        <section class="p-card" aria-labelledby="h-link">
+        <section class="card card-stack" aria-labelledby="h-link">
           <h2 class="p-h2 big" id="h-link">Link del formulario</h2>
           <p class="p-sub">Compartilo con los docentes por el canal de la escuela.</p>
           <div class="link-row">
@@ -97,7 +97,7 @@
               <label for="s-link" class="visually-hidden">Link del formulario de inscripción</label>
               <input #linkInput id="s-link" class="input num" type="text" readonly [value]="formUrl" />
             </div>
-            <button type="button" class="pbtn pbtn-brand" (click)="copyLink()">
+            <button type="button" class="btn btn-sm btn-brand" (click)="copyLink()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"></path></svg>
               {{ copyState() === 'copied' ? 'Copiado' : 'Copiar' }}
             </button>
@@ -111,7 +111,7 @@
         </section>
 
         @if (archivedCycles().length > 0) {
-          <section class="p-card" aria-labelledby="h-archivados">
+          <section class="card card-stack" aria-labelledby="h-archivados">
             <h2 class="p-h2 big" id="h-archivados">Ciclos archivados</h2>
             <ul class="archived">
               @for (cycle of archivedCycles(); track cycle.id) {
@@ -126,19 +126,19 @@
         }
       </div>
 
-      <section class="p-card positions" aria-labelledby="h-puestos">
+      <section class="card card-stack positions" aria-labelledby="h-puestos">
         <div class="card-head">
           <div class="head-text">
             <h2 class="p-h2 big" id="h-puestos">Puestos</h2>
             <p class="p-sub">Lo que aparece en el formulario para elegir.</p>
           </div>
-          <button type="button" class="pbtn pbtn-primary" (click)="openPosition(null)">
+          <button type="button" class="btn btn-sm btn-primary" (click)="openPosition(null)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
             Agregar puesto
           </button>
         </div>
         @if (positions().length === 0) {
-          <p class="p-state">Todavía no hay puestos. Agregá el primero.</p>
+          <p class="state-box">Todavía no hay puestos. Agregá el primero.</p>
         } @else {
           <div class="p-table-wrap" tabindex="0" role="region" aria-label="Tabla de materias y cargos">
             <table class="p-table positions-table">
@@ -169,7 +169,7 @@
                     <td class="action">
                       <button
                         type="button"
-                        class="pbtn pbtn-icon"
+                        class="btn btn-sm btn-icon"
                         [attr.aria-label]="'Editar ' + position.name"
                         (click)="openPosition(position)"
                       >
@@ -187,8 +187,8 @@
   }
 }
 
-<dialog #archiveDialog class="p-dialog" aria-labelledby="a-title" aria-describedby="a-text">
-  <form class="p-dialog-body" [formGroup]="archiveForm" (submit)="$event.preventDefault(); createCycle()" novalidate>
+<dialog #archiveDialog class="dialog" aria-labelledby="a-title" aria-describedby="a-text">
+  <form class="dialog-body" [formGroup]="archiveForm" (submit)="$event.preventDefault(); createCycle()" novalidate>
     <h2 class="p-h2" id="a-title">
       @if (activeCycle(); as cycle) {
         Archivar el ciclo {{ cycle.year }} y abrir el {{ nextYear() }}
@@ -252,17 +252,17 @@
         <p class="error" id="a-hasta-error" role="alert">{{ archiveErrors().until }}</p>
       }
     </div>
-    <div class="p-actions">
-      <button type="button" class="pbtn pbtn-outline" (click)="closeArchive()">Cancelar</button>
-      <button type="submit" class="pbtn pbtn-primary" [disabled]="archiveSaving()">
+    <div class="actions">
+      <button type="button" class="btn btn-sm btn-outline" (click)="closeArchive()">Cancelar</button>
+      <button type="submit" class="btn btn-sm btn-primary" [disabled]="archiveSaving()">
         {{ archiveSaving() ? 'Guardando…' : activeCycle() ? 'Archivar y abrir ' + nextYear() : 'Abrir ciclo' }}
       </button>
     </div>
   </form>
 </dialog>
 
-<dialog #positionDialog class="p-dialog" aria-labelledby="p-title">
-  <form class="p-dialog-body" [formGroup]="positionForm" (submit)="$event.preventDefault(); savePosition()" novalidate>
+<dialog #positionDialog class="dialog" aria-labelledby="p-title">
+  <form class="dialog-body" [formGroup]="positionForm" (submit)="$event.preventDefault(); savePosition()" novalidate>
     <h2 class="p-h2" id="p-title">{{ editingPosition() ? 'Editar puesto' : 'Agregar puesto' }}</h2>
     @if (positionErrors().general) {
       <p class="alert" role="alert">{{ positionErrors().general }}</p>
@@ -301,7 +301,7 @@
     </div>
     @if (editingPosition()) {
       <div class="field">
-        <label class="p-check" for="p-activo">
+        <label class="check" for="p-activo">
           <input id="p-activo" type="checkbox" formControlName="active" />
           Activo en el formulario
         </label>
@@ -311,9 +311,9 @@
         </p>
       </div>
     }
-    <div class="p-actions">
-      <button type="button" class="pbtn pbtn-outline" (click)="closePosition()">Cancelar</button>
-      <button type="submit" class="pbtn pbtn-primary" [disabled]="positionSaving()">
+    <div class="actions">
+      <button type="button" class="btn btn-sm btn-outline" (click)="closePosition()">Cancelar</button>
+      <button type="submit" class="btn btn-sm btn-primary" [disabled]="positionSaving()">
         {{ positionSaving() ? 'Guardando…' : 'Guardar' }}
       </button>
     </div>

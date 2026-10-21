@@ -12,7 +12,7 @@
     }
   </div>
   @if (state() === 'ready' && current?.cycle && current?.position) {
-    <button type="button" class="pbtn pbtn-brand no-print" (click)="print()">
+    <button type="button" class="btn btn-sm btn-brand no-print" (click)="print()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 15h10v6H7z"></path></svg>
       Imprimir listado
     </button>
@@ -34,7 +34,7 @@
   </p>
 }
 
-<form class="filters p-card no-print" (submit)="$event.preventDefault()" aria-label="Filtros del listado">
+<form class="filters card card-stack no-print" (submit)="$event.preventDefault()" aria-label="Filtros del listado">
   <div class="field filter-position">
     <label for="fl-puesto">Materia o cargo</label>
     <select id="fl-puesto" class="input" (change)="onPosition($event)">
@@ -68,7 +68,7 @@
     </div>
   </fieldset>
 
-  <label class="p-check">
+  <label class="check">
     <input type="checkbox" [checked]="filters().onlyVerified" (change)="onOnlyVerified($event)" />
     Solo verificados
   </label>
@@ -76,27 +76,27 @@
 
 @switch (state()) {
   @case ('loading') {
-    <p class="p-state" role="status">Cargando el listado…</p>
+    <p class="state-box" role="status">Cargando el listado…</p>
   }
   @case ('error') {
-    <div class="p-state" role="alert">
+    <div class="state-box" role="alert">
       <p>{{ errorMessage() }}</p>
-      <button type="button" class="pbtn pbtn-outline retry" (click)="retry()">Reintentar</button>
+      <button type="button" class="btn btn-sm btn-outline retry" (click)="retry()">Reintentar</button>
     </div>
   }
   @case ('notFound') {
-    <p class="p-state" role="alert">
+    <p class="state-box" role="alert">
       No encontramos esa materia o cargo. Elegí otra en el filtro.
     </p>
   }
   @case ('ready') {
     @if (current && !current.cycle) {
-      <p class="p-state">
+      <p class="state-box">
         No hay un ciclo activo, así que todavía no hay listado.
         <a routerLink="/panel/configuracion">Abrí un ciclo desde Ciclo y puestos</a>.
       </p>
     } @else if (current && !current.position) {
-      <p class="p-state">
+      <p class="state-box">
         Todavía no hay materias o cargos activos.
         <a routerLink="/panel/configuracion">Agregá uno desde Ciclo y puestos</a>.
       </p>
@@ -117,7 +117,7 @@
           </div>
 
           @if (group.rows.length === 0) {
-            <p class="p-state">
+            <p class="state-box">
               {{
                 hasFilters()
                   ? 'Ningún postulante de este grupo coincide con los filtros.'
@@ -171,7 +171,7 @@
                       <td class="num phone">{{ row.phone }}</td>
                       <td class="no-print action">
                         <a
-                          class="pbtn pbtn-outline see"
+                          class="btn btn-sm btn-outline see"
                           [routerLink]="['/panel/postulantes', row.applicantId]"
                           [queryParams]="detailQuery()"
                           [attr.aria-label]="'Ver a ' + fullName(row)"
