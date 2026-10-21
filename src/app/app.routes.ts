@@ -30,6 +30,11 @@ export const routes: Routes = [
         title: 'Postulante · Listo',
         loadComponent: () => import('./features/panel/detail/detail').then((m) => m.Detail),
       },
+      {
+        path: 'configuracion',
+        title: 'Ciclo y puestos · Listo',
+        loadComponent: () => import('./features/panel/settings/settings').then((m) => m.Settings),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

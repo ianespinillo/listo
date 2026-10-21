@@ -1,0 +1,317 @@
+<h1 class="p-title">Ciclo y puestos</h1>
+
+<p class="visually-hidden" role="status" aria-live="polite">{{ announcement() }}</p>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="p-state" role="status">Cargando…</p>
+  }
+  @case ('error') {
+    <div class="p-state" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="pbtn pbtn-outline retry" (click)="load()">Reintentar</button>
+    </div>
+  }
+  @case ('ready') {
+    <div class="columns">
+      <div class="left">
+        <section class="p-card" aria-labelledby="h-ciclo">
+          @if (activeCycle(); as cycle) {
+            <div class="card-head">
+              <h2 class="p-h2 big" id="h-ciclo">Ciclo lectivo {{ cycle.year }}</h2>
+              <span [class]="cycle.open ? 'badge badge-ok' : 'badge'">
+                {{ cycle.open ? 'Inscripción abierta' : 'Inscripción cerrada' }}
+              </span>
+            </div>
+
+            <form (submit)="$event.preventDefault(); saveDates()" [formGroup]="datesForm" novalidate class="dates-form">
+              <div class="dates">
+                <div class="field">
+                  <label for="s-desde">Inscripción desde</label>
+                  <input
+                    id="s-desde"
+                    class="input"
+                    type="date"
+                    formControlName="from"
+                    [attr.aria-invalid]="datesErrors().from ? 'true' : null"
+                    [attr.aria-describedby]="datesErrors().from ? 's-desde-error' : null"
+                  />
+                  @if (datesErrors().from) {
+                    <p class="error" id="s-desde-error" role="alert">{{ datesErrors().from }}</p>
+                  }
+                </div>
+                <div class="field">
+                  <label for="s-hasta">Inscripción hasta</label>
+                  <input
+                    id="s-hasta"
+                    class="input"
+                    type="date"
+                    formControlName="until"
+                    [attr.aria-invalid]="datesErrors().until ? 'true' : null"
+                    [attr.aria-describedby]="datesErrors().until ? 's-hasta-error' : null"
+                  />
+                  @if (datesErrors().until) {
+                    <p class="error" id="s-hasta-error" role="alert">{{ datesErrors().until }}</p>
+                  }
+                </div>
+              </div>
+              <p class="hint">
+                Fuera de estas fechas el formulario no acepta envíos ni modificaciones. Ampliar el plazo reabre
+                la inscripción.
+              </p>
+              @if (datesErrors().general) {
+                <p class="alert" role="alert">{{ datesErrors().general }}</p>
+              }
+              @if (datesSaved()) {
+                <p class="notice" role="status">Fechas guardadas.</p>
+              }
+              <div class="p-actions">
+                <button type="submit" class="pbtn pbtn-primary" [disabled]="datesSaving()">
+                  {{ datesSaving() ? 'Guardando…' : 'Guardar fechas' }}
+                </button>
+                <button type="button" class="pbtn pbtn-outline" (click)="openArchive()">
+                  Archivar ciclo y abrir {{ nextYear() }}
+                </button>
+              </div>
+            </form>
+          } @else {
+            <h2 class="p-h2 big" id="h-ciclo">Ciclo lectivo</h2>
+            <p>No hay un ciclo activo. Sin ciclo, el formulario público está cerrado.</p>
+            <div class="p-actions">
+              <button type="button" class="pbtn pbtn-primary" (click)="openArchive()">
+                Abrir el ciclo {{ nextYear() }}
+              </button>
+            </div>
+          }
+        </section>
+
+        <section class="p-card" aria-labelledby="h-link">
+          <h2 class="p-h2 big" id="h-link">Link del formulario</h2>
+          <p class="p-sub">Compartilo con los docentes por el canal de la escuela.</p>
+          <div class="link-row">
+            <div class="field link-field">
+              <label for="s-link" class="visually-hidden">Link del formulario de inscripción</label>
+              <input #linkInput id="s-link" class="input num" type="text" readonly [value]="formUrl" />
+            </div>
+            <button type="button" class="pbtn pbtn-brand" (click)="copyLink()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"></path></svg>
+              {{ copyState() === 'copied' ? 'Copiado' : 'Copiar' }}
+            </button>
+          </div>
+          <p class="visually-hidden" role="status" aria-live="polite">
+            {{ copyState() === 'copied' ? 'Link copiado.' : '' }}
+          </p>
+          @if (copyState() === 'failed') {
+            <p class="error" role="alert">No pudimos copiarlo solo. Quedó seleccionado: copialo con Ctrl+C.</p>
+          }
+        </section>
+
+        @if (archivedCycles().length > 0) {
+          <section class="p-card" aria-labelledby="h-archivados">
+            <h2 class="p-h2 big" id="h-archivados">Ciclos archivados</h2>
+            <ul class="archived">
+              @for (cycle of archivedCycles(); track cycle.id) {
+                <li>
+                  <strong>Ciclo {{ cycle.year }}</strong>
+                  <span class="num">{{ date(cycle.registrationFrom) }} al {{ date(cycle.registrationUntil) }}</span>
+                  <span>{{ cycle.applicants }} {{ cycle.applicants === 1 ? 'postulante' : 'postulantes' }}</span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+
+      <section class="p-card positions" aria-labelledby="h-puestos">
+        <div class="card-head">
+          <div class="head-text">
+            <h2 class="p-h2 big" id="h-puestos">Puestos</h2>
+            <p class="p-sub">Lo que aparece en el formulario para elegir.</p>
+          </div>
+          <button type="button" class="pbtn pbtn-primary" (click)="openPosition(null)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+            Agregar puesto
+          </button>
+        </div>
+        @if (positions().length === 0) {
+          <p class="p-state">Todavía no hay puestos. Agregá el primero.</p>
+        } @else {
+          <div class="p-table-wrap">
+            <table class="p-table positions-table">
+              <caption class="visually-hidden">Materias y cargos</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Postulantes</th>
+                  <th scope="col" class="action"><span class="visually-hidden">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (position of positions(); track position.id) {
+                  <tr [class.is-inactive]="!position.active">
+                    <th scope="row" class="pname">
+                      {{ position.name }}
+                      @if (!position.active) {
+                        <span class="badge badge-error">Inactivo</span>
+                      }
+                    </th>
+                    <td>
+                      <span [class]="position.type === 'CARGO' ? 'badge badge-cargo' : 'badge badge-asig'">
+                        {{ position.type === 'CARGO' ? 'Cargo' : 'Asignatura' }}
+                      </span>
+                    </td>
+                    <td class="num">{{ position.activeCycleApplicants }}</td>
+                    <td class="action">
+                      <button
+                        type="button"
+                        class="pbtn pbtn-icon"
+                        [attr.aria-label]="'Editar ' + position.name"
+                        (click)="openPosition(position)"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="M13.5 6.5l4 4"></path></svg>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    </div>
+  }
+}
+
+<dialog #archiveDialog class="p-dialog" aria-labelledby="a-title" aria-describedby="a-text">
+  <form class="p-dialog-body" [formGroup]="archiveForm" (submit)="$event.preventDefault(); createCycle()" novalidate>
+    <h2 class="p-h2" id="a-title">
+      @if (activeCycle(); as cycle) {
+        Archivar el ciclo {{ cycle.year }} y abrir el {{ nextYear() }}
+      } @else {
+        Abrir un ciclo
+      }
+    </h2>
+    <p id="a-text">
+      @if (activeCycle(); as cycle) {
+        El ciclo {{ cycle.year }} queda archivado y ya no se puede editar. El nuevo pasa a ser el activo: los
+        postulantes del {{ cycle.year }} dejan de aparecer en el listado y los docentes se reinscriben.
+      } @else {
+        El nuevo ciclo pasa a ser el activo y se abre la inscripción en las fechas que indiques.
+      }
+    </p>
+    @if (archiveErrors().general) {
+      <p class="alert" role="alert">{{ archiveErrors().general }}</p>
+    }
+    @if (!activeCycle()) {
+      <div class="field">
+        <label for="a-anio">Año del ciclo</label>
+        <input
+          id="a-anio"
+          class="input num"
+          type="number"
+          inputmode="numeric"
+          formControlName="year"
+          [attr.aria-invalid]="archiveErrors().year ? 'true' : null"
+          [attr.aria-describedby]="archiveErrors().year ? 'a-anio-error' : null"
+        />
+        @if (archiveErrors().year) {
+          <p class="error" id="a-anio-error" role="alert">{{ archiveErrors().year }}</p>
+        }
+      </div>
+    }
+    <div class="field">
+      <label for="a-desde">Inscripción desde</label>
+      <input
+        id="a-desde"
+        class="input"
+        type="date"
+        formControlName="from"
+        [attr.aria-invalid]="archiveErrors().from ? 'true' : null"
+        [attr.aria-describedby]="archiveErrors().from ? 'a-desde-error' : null"
+      />
+      @if (archiveErrors().from) {
+        <p class="error" id="a-desde-error" role="alert">{{ archiveErrors().from }}</p>
+      }
+    </div>
+    <div class="field">
+      <label for="a-hasta">Inscripción hasta</label>
+      <input
+        id="a-hasta"
+        class="input"
+        type="date"
+        formControlName="until"
+        [attr.aria-invalid]="archiveErrors().until ? 'true' : null"
+        [attr.aria-describedby]="archiveErrors().until ? 'a-hasta-error' : null"
+      />
+      @if (archiveErrors().until) {
+        <p class="error" id="a-hasta-error" role="alert">{{ archiveErrors().until }}</p>
+      }
+    </div>
+    <div class="p-actions">
+      <button type="button" class="pbtn pbtn-outline" (click)="closeArchive()">Cancelar</button>
+      <button type="submit" class="pbtn pbtn-primary" [disabled]="archiveSaving()">
+        {{ archiveSaving() ? 'Guardando…' : activeCycle() ? 'Archivar y abrir ' + nextYear() : 'Abrir ciclo' }}
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<dialog #positionDialog class="p-dialog" aria-labelledby="p-title">
+  <form class="p-dialog-body" [formGroup]="positionForm" (submit)="$event.preventDefault(); savePosition()" novalidate>
+    <h2 class="p-h2" id="p-title">{{ editingPosition() ? 'Editar puesto' : 'Agregar puesto' }}</h2>
+    @if (positionErrors().general) {
+      <p class="alert" role="alert">{{ positionErrors().general }}</p>
+    }
+    <div class="field">
+      <label for="p-nombre">Nombre</label>
+      <input
+        id="p-nombre"
+        class="input"
+        type="text"
+        maxlength="80"
+        autocomplete="off"
+        formControlName="name"
+        [attr.aria-invalid]="positionErrors().name ? 'true' : null"
+        [attr.aria-describedby]="positionErrors().name ? 'p-nombre-error' : null"
+      />
+      @if (positionErrors().name) {
+        <p class="error" id="p-nombre-error" role="alert">{{ positionErrors().name }}</p>
+      }
+    </div>
+    <div class="field">
+      <label for="p-tipo">Tipo</label>
+      <select
+        id="p-tipo"
+        class="input"
+        formControlName="type"
+        [attr.aria-invalid]="positionErrors().type ? 'true' : null"
+        [attr.aria-describedby]="positionErrors().type ? 'p-tipo-error' : null"
+      >
+        <option value="ASIGNATURA">Asignatura</option>
+        <option value="CARGO">Cargo</option>
+      </select>
+      @if (positionErrors().type) {
+        <p class="error" id="p-tipo-error" role="alert">{{ positionErrors().type }}</p>
+      }
+    </div>
+    @if (editingPosition()) {
+      <div class="field">
+        <label class="p-check" for="p-activo">
+          <input id="p-activo" type="checkbox" formControlName="active" />
+          Activo en el formulario
+        </label>
+        <p class="hint">
+          Un puesto inactivo deja de aparecer en el formulario público. No se borra: sus postulaciones se
+          conservan.
+        </p>
+      </div>
+    }
+    <div class="p-actions">
+      <button type="button" class="pbtn pbtn-outline" (click)="closePosition()">Cancelar</button>
+      <button type="submit" class="pbtn pbtn-primary" [disabled]="positionSaving()">
+        {{ positionSaving() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+</dialog>
