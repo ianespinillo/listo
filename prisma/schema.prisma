@@ -1,0 +1,145 @@
+// Listo — modelo de datos (Prisma 7 + PostgreSQL)
+// La URL de la base está en prisma.config.ts, no acá.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/server/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TipoPuesto {
+  ASIGNATURA
+  CARGO
+}
+
+enum SituacionRevista {
+  TITULAR
+  PROVISIONAL
+  SUPLENTE
+  EXTERNO
+}
+
+enum Turno {
+  MANANA
+  TARDE
+  VESPERTINO
+}
+
+enum TipoEvento {
+  INSCRIPCION
+  CAMBIO_DATOS     // cambió situación de revista o antigüedad
+  CAMBIO_PUNTAJE
+  ALTA_MATERIA
+  BAJA_MATERIA
+  VERIFICACION
+  DESVERIFICACION
+  CAMBIO_EMAIL     // lo hizo la directora desde el panel
+  BAJA
+  REACTIVACION
+}
+
+model Ciclo {
+  id               Int          @id @default(autoincrement())
+  anio             Int          @unique
+  inscripcionDesde DateTime     @map("inscripcion_desde") @db.Date
+  inscripcionHasta DateTime     @map("inscripcion_hasta") @db.Date
+  // Un solo ciclo activo: índice único parcial en migración manual (ver docs/plan.md, Etapa 1)
+  activo           Boolean      @default(false)
+  creadoEn         DateTime     @default(now()) @map("creado_en")
+  postulantes      Postulante[]
+
+  @@map("ciclo")
+}
+
+model Puesto {
+  id            Int           @id @default(autoincrement())
+  nombre        String        @unique
+  tipo          TipoPuesto
+  // Un puesto con postulaciones no se borra: se desactiva
+  activo        Boolean       @default(true)
+  postulaciones Postulacion[]
+  eventos       Evento[]
+
+  @@map("puesto")
+}
+
+model Postulante {
+  id               Int              @id @default(autoincrement())
+  cicloId          Int              @map("ciclo_id")
+  ciclo            Ciclo            @relation(fields: [cicloId], references: [id])
+  dni              String           // solo dígitos
+  apellido         String
+  nombre           String
+  email            String           // normalizado: trim + minúsculas
+  telefono         String
+  situacionRevista SituacionRevista @map("situacion_revista")
+  antiguedadMeses  Int              @map("antiguedad_meses")
+  turnos           Turno[]
+  dadoDeBaja       Boolean          @default(false) @map("dado_de_baja")
+  creadoEn         DateTime         @default(now()) @map("creado_en")
+  actualizadoEn    DateTime         @updatedAt @map("actualizado_en")
+  postulaciones    Postulacion[]
+  eventos          Evento[]
+
+  @@unique([cicloId, dni])
+  @@index([cicloId, dadoDeBaja])
+  @@map("postulante")
+}
+
+model Postulacion {
+  postulanteId    Int        @map("postulante_id")
+  postulante      Postulante @relation(fields: [postulanteId], references: [id], onDelete: Cascade)
+  puestoId        Int        @map("puesto_id")
+  puesto          Puesto     @relation(fields: [puestoId], references: [id])
+  puntaje         Decimal    @db.Decimal(5, 2)
+  verificado      Boolean    @default(false)
+  // true cuando el docente cambió el puntaje después de la última verificación
+  modificado      Boolean    @default(false)
+  // puntaje previo al último cambio; se limpia al verificar
+  puntajeAnterior Decimal?   @map("puntaje_anterior") @db.Decimal(5, 2)
+  verificadoEn    DateTime?  @map("verificado_en")
+
+  @@id([postulanteId, puestoId])
+  @@index([puestoId])
+  @@map("postulacion")
+}
+
+model Evento {
+  id           Int        @id @default(autoincrement())
+  postulanteId Int        @map("postulante_id")
+  postulante   Postulante @relation(fields: [postulanteId], references: [id], onDelete: Cascade)
+  tipo         TipoEvento
+  puestoId     Int?       @map("puesto_id")
+  puesto       Puesto?    @relation(fields: [puestoId], references: [id])
+  // valores anterior/nuevo según el tipo, p. ej. { "anterior": "36.10", "nuevo": "38.45" }
+  detalle      Json?
+  fecha        DateTime   @default(now())
+
+  @@index([postulanteId, fecha])
+  @@map("evento")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  creadoEn     DateTime @default(now()) @map("creado_en")
+  sesiones     Sesion[]
+
+  @@map("admin")
+}
+
+model Sesion {
+  // SHA-256 del token de la cookie; el token en claro nunca se guarda
+  tokenHash String   @id @map("token_hash")
+  adminId   Int      @map("admin_id")
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  expiraEn  DateTime @map("expira_en")
+  creadoEn  DateTime @default(now()) @map("creado_en")
+
+  @@index([expiraEn])
+  @@map("sesion")
+}

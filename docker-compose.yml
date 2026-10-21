@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: listo
+      POSTGRES_PASSWORD: listo
+      POSTGRES_DB: listo
+    ports:
+      - "5432:5432"
+    volumes:
+      - listo-db:/var/lib/postgresql/data
+
+  # Base separada para los tests de integración
+  db-test:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: listo
+      POSTGRES_PASSWORD: listo
+      POSTGRES_DB: listo_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
+volumes:
+  listo-db:

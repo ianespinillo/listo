@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Listado ordenado</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4D3A}a:hover{color:#17211B}
+input,select,button{font:inherit}
+input:focus,select:focus{outline:3px solid #E8B64A;outline-offset:1px}
+button:focus-visible,a:focus-visible{outline:3px solid #E8B64A;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 1100px; box-sizing: border-box; background: #F6F5F1; color: #17211B; font-family: 'IBM Plex Sans', system-ui, sans-serif;">
+
+  <header style="background: #1F4D3A; color: #FFFFFF;">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 14px 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <svg width="32" height="32" viewBox="0 0 48 48" aria-hidden="true">
+          <rect x="0" y="0" width="48" height="48" rx="12" fill="#F6F5F1"></rect>
+          <rect x="10" y="12" width="24" height="5" rx="2.5" fill="#1F4D3A"></rect>
+          <rect x="10" y="21.5" width="18" height="5" rx="2.5" fill="#1F4D3A" fill-opacity="0.8"></rect>
+          <rect x="10" y="31" width="11" height="5" rx="2.5" fill="#1F4D3A" fill-opacity="0.6"></rect>
+          <path d="M26 32.5 L30 36.5 L38.5 27" fill="none" stroke="#C99528" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 22px;">Listo<span style="color: #E8B64A;">.</span></span>
+      </div>
+      <nav aria-label="Secciones del panel" style="display: flex; gap: 4px; flex-grow: 1;">
+        <a href="Listado.dc.html" aria-current="page" style="padding: 10px 14px; border-radius: 10px; background: #2C624B; color: #FFFFFF; font-size: 15px; font-weight: 600; text-decoration: none;">Listado</a>
+        <a href="Configuracion.dc.html" style="padding: 10px 14px; border-radius: 10px; color: #D5E3D9; font-size: 15px; font-weight: 500; text-decoration: none;">Ciclo y puestos</a>
+      </nav>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <span style="padding: 5px 10px; border-radius: 999px; background: #E8B64A; color: #17211B; font-size: 13px; font-weight: 600;">Ciclo 2027 · inscripción cerrada</span>
+        <a href="Login.dc.html" style="color: #FFFFFF; font-size: 14px;">Salir</a>
+      </div>
+    </div>
+  </header>
+
+  <main style="max-width: 1280px; margin: 0 auto; padding: 32px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -0.5px;">Matemática</h1>
+        <p style="margin: 0; font-size: 15px; color: #4A534D;">8 postulantes · 5 verificados · 1 con puntaje modificado</p>
+      </div>
+      <a href="#" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1.5px solid #1F4D3A; color: #1F4D3A; font-size: 15px; font-weight: 600; text-decoration: none; background: #FFFFFF;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"></path><rect x="4" y="9" width="16" height="8" rx="2"></rect><path d="M7 15h10v6H7z"></path></svg>Imprimir listado</a>
+    </div>
+
+    <div style="background: #FFFFFF; border: 1px solid #DAD8D0; border-radius: 16px; padding: 16px 18px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 24px;">
+      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 240px; flex: 1 1 240px;">
+        <label for="fl-puesto" style="font-size: 13px; font-weight: 600; color: #4A534D;">Materia o cargo</label>
+        <select id="fl-puesto" style="height: 44px; box-sizing: border-box; border: 1.5px solid #C9C6BC; border-radius: 10px; padding: 0 10px; font-size: 15px; background: #FFFFFF; color: #17211B;">
+          <option>Matemática</option>
+          <option>Física</option>
+          <option>Prácticas del Lenguaje</option>
+          <option>Preceptor/a (cargo)</option>
+        </select>
+      </div>
+      <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px;">
+        <legend style="font-size: 13px; font-weight: 600; color: #4A534D; padding: 0 0 6px;">Turno</legend>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" aria-pressed="true" style="min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid #1F4D3A; background: #1F4D3A; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer;">Todos</button>
+          <button type="button" aria-pressed="false" style="min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid #C9C6BC; background: #FFFFFF; color: #17211B; font-size: 14px; font-weight: 600; cursor: pointer;">Mañana</button>
+          <button type="button" aria-pressed="false" style="min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid #C9C6BC; background: #FFFFFF; color: #17211B; font-size: 14px; font-weight: 600; cursor: pointer;">Tarde</button>
+          <button type="button" aria-pressed="false" style="min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid #C9C6BC; background: #FFFFFF; color: #17211B; font-size: 14px; font-weight: 600; cursor: pointer;">Vespertino</button>
+        </div>
+      </fieldset>
+      <label style="display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; font-weight: 600; cursor: pointer;">
+        <input type="checkbox" style="width: 20px; height: 20px; accent-color: #1F4D3A; margin: 0;">Solo verificados</label>
+    </div>
+
+    <p style="margin: 0; font-size: 13px; color: #5B655F;">Orden según art. 108 C del Decreto 2485/92, texto del Decreto 900/23. El número de orden es a quién ofrecer primero.</p>
+
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+      <section style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;">
+          <span style="width: 30px; height: 30px; border-radius: 999px; box-sizing: border-box; border: 2px solid #1F4D3A; background: {{g.badgeBg}}; color: {{g.badgeFg}}; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px;">{{g.num}}</span>
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px;">{{g.title}}</h2>
+          <span style="font-size: 14px; color: #4A534D;">{{g.rule}}</span>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #DAD8D0; border-radius: 14px; overflow-x: auto;">
+          <table style="width: 100%; min-width: 980px; border-collapse: collapse; font-size: 14px;">
+            <thead>
+              <tr style="text-align: left; color: #4A534D; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px;">
+                <th scope="col" style="padding: 12px 16px; font-weight: 600; width: 56px;">Orden</th>
+                <th scope="col" style="padding: 12px 16px; font-weight: 600;">Docente</th>
+                <th scope="col" style="padding: 12px 16px; font-weight: 600;">Situación</th>
+                <th scope="col" style="padding: 12px 16px; font-weight: 600;">Antigüedad</th>
+                <th scope="col" style="padding: 12px 16px; font-weight: 600;">Puntaje</th>
+                <th scope="col" style="padding: 12px 16px; font-weight: 600;">Turnos</th>
+                <th scope="col" style="padding: 12px 16px; font-weight: 600;">Estado</th>
+                <th scope="col" style="padding: 12px 16px; font-weight: 600;">Teléfono</th>
+                <th scope="col" style="padding: 12px 16px; font-weight: 600;"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">Acciones</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="3">
+                <tr style="border-top: 1px solid #ECEAE3;">
+                  <td style="padding: 14px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 500; color: #1F4D3A;">{{r.orden}}</td>
+                  <td style="padding: 14px 16px;">
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                      <span style="font-weight: 600; font-size: 15px;">{{r.nombre}}</span>
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5B655F;">DNI {{r.dni}}</span>
+                    </div>
+                  </td>
+                  <td style="padding: 14px 16px;">{{r.situacion}}</td>
+                  <td style="padding: 14px 16px; font-family: 'IBM Plex Mono', monospace; font-weight: {{r.antW}}; color: {{r.antC}};">{{r.ant}}</td>
+                  <td style="padding: 14px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: {{r.ptsW}}; color: {{r.ptsC}};">{{r.pts}}</td>
+                  <td style="padding: 14px 16px;">
+                    <div style="display: flex; gap: 4px;">
+                      <sc-for list="{{r.turnos}}" as="t" hint-placeholder-count="2">
+                        <span title="{{t.full}}" style="width: 26px; height: 26px; border-radius: 8px; background: #EEF4F0; color: #1F4D3A; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">{{t.short}}</span>
+                      </sc-for>
+                    </div>
+                  </td>
+                  <td style="padding: 14px 16px;">
+                    <span style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: {{r.estBg}}; color: {{r.estFg}}; font-size: 12px; font-weight: 600; white-space: nowrap;">{{r.estado}}</span>
+                  </td>
+                  <td style="padding: 14px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; white-space: nowrap;">{{r.tel}}</td>
+                  <td style="padding: 14px 16px; text-align: right;">
+                    <a href="Detalle.dc.html" style="display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #C9C6BC; color: #17211B; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;">Ver</a>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </sc-for>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var T = { M: 'Mañana', T: 'Tarde', V: 'Vespertino' };
+    var est = {
+      ok: { label: 'Verificado', bg: '#DCEBDF', fg: '#1F4D3A' },
+      no: { label: 'Sin verificar', bg: '#EFEEE9', fg: '#4A534D' },
+      mod: { label: 'Puntaje modificado', bg: '#FBEBC4', fg: '#6E4400' }
+    };
+    function row(orden, nombre, dni, situacion, ant, pts, turnos, e, tel, key) {
+      var s = est[e];
+      return {
+        orden: orden, nombre: nombre, dni: dni, situacion: situacion, ant: ant, pts: pts, tel: tel,
+        turnos: turnos.split('').map(function (k) { return { short: k, full: T[k] }; }),
+        estado: s.label, estBg: s.bg, estFg: s.fg,
+        antW: key === 'ant' || key === 'both' ? 600 : 400,
+        antC: key === 'ant' || key === 'both' ? '#17211B' : '#5B655F',
+        ptsW: key === 'pts' || key === 'both' ? 600 : 400,
+        ptsC: key === 'pts' || key === 'both' ? '#17211B' : '#5B655F'
+      };
+    }
+    return {
+      groups: [
+        {
+          num: '1', title: 'Titulares de la escuela', rule: 'Ordenados por antigüedad docente',
+          badgeBg: '#1F4D3A', badgeFg: '#FFFFFF',
+          rows: [
+            row('1', 'Gómez, Mariana', '22481903', 'Titular', '21 a 4 m', '44,10', 'MT', 'ok', '11 4021 3387', 'ant'),
+            row('2', 'Ferreyra, Pablo', '25317640', 'Titular', '16 a 0 m', '39,85', 'T', 'ok', '11 6230 1145', 'ant')
+          ]
+        },
+        {
+          num: '2', title: 'Provisionales y suplentes', rule: 'Por puntaje; si empatan, por antigüedad',
+          badgeBg: '#CFE0D4', badgeFg: '#17211B',
+          rows: [
+            row('3', 'Pereyra, Laura Inés', '28123456', 'Provisional', '9 a 2 m', '38,45', 'MT', 'mod', '11 5544 0921', 'pts'),
+            row('4', 'Benítez, Julián', '27650318', 'Suplente', '11 a 6 m', '35,00', 'M', 'ok', '11 3398 7702', 'both'),
+            row('5', 'Sosa, Carla', '31004287', 'Provisional', '6 a 1 m', '35,00', 'TV', 'ok', '11 4877 6610', 'both'),
+            row('6', 'Acosta, Romina', '35772019', 'Suplente', '3 a 9 m', '29,60', 'V', 'no', '11 2765 4408', 'pts')
+          ]
+        },
+        {
+          num: '3', title: 'Docentes de otras escuelas', rule: 'Por puntaje del Listado Oficial',
+          badgeBg: '#FFFFFF', badgeFg: '#1F4D3A',
+          rows: [
+            row('7', 'Villalba, Diego', '26988145', 'Externo', '12 a 0 m', '41,20', 'MTV', 'ok', '11 6012 9934', 'pts'),
+            row('8', 'Luna, Sofía', '38245570', 'Externo', '2 a 5 m', '27,35', 'T', 'no', '11 5190 2286', 'pts')
+          ]
+        }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
