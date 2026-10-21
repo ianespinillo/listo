@@ -8,35 +8,29 @@ import {
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { join } from 'node:path';
-import { prisma } from './server/db';
+import { createApiRouter } from './server/api';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-app.use(express.json());
+/**
+ * Detrás de un proxy (nginx, PM2 + proxy) hay que decir cuántos saltos confiar para que el rate
+ * limit vea la IP real. TRUST_PROXY: vacío = apagado, número = cantidad de saltos, "true" = confiar.
+ */
+const trustProxy = process.env['TRUST_PROXY']?.trim();
+if (trustProxy) {
+  app.set('trust proxy', trustProxy === 'true' ? true : /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
+}
+
 app.use(cookieParser());
 
 /**
  * API. Se monta antes de los estáticos y del handler de Angular.
+ * El router parsea su propio JSON y responde 404 en JSON para cualquier /api/* desconocido.
  */
-app.get('/api/health', async (_req, res) => {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    res.json({ ok: true });
-  } catch {
-    res.status(503).json({
-      error: 'DATABASE_UNAVAILABLE',
-      message: 'No se pudo conectar con la base de datos. Intentá de nuevo en unos minutos.',
-    });
-  }
-});
-
-// Cualquier otra ruta /api/* responde JSON y nunca llega a Angular.
-app.use('/api', (_req, res) => {
-  res.status(404).json({ error: 'NOT_FOUND', message: 'No existe el recurso solicitado.' });
-});
+app.use('/api', createApiRouter());
 
 /**
  * Estáticos desde /browser.

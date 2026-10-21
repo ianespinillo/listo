@@ -20,7 +20,8 @@ elementos de la lista se escriben así: `applications.1.score`.
 
 Códigos de error: `VALIDATION_ERROR`, `REGISTRATION_CLOSED`, `DATA_MISMATCH`,
 `TOO_MANY_REQUESTS`, `UNAUTHENTICATED`, `INVALID_CREDENTIALS`, `DUPLICATE_POSITION`,
-`CYCLE_ARCHIVED`, `CYCLE_EXISTS`, `NOT_FOUND`, `DATABASE_UNAVAILABLE`.
+`CYCLE_ARCHIVED`, `CYCLE_EXISTS`, `NOT_FOUND`, `DATABASE_UNAVAILABLE` e `INTERNAL_ERROR`
+(`500`, error no previsto; el `message` es genérico y nunca expone detalles internos).
 
 ---
 
