@@ -3,71 +3,50 @@
 <p class="visually-hidden" role="status" aria-live="polite">{{ announcement() }}</p>
 
 @if (staleNotice()) {
-  <p class="alert alert-warn" role="status">{{ staleNotice() }}</p>
+  <app-alert variant="warn" role="status">{{ staleNotice() }}</app-alert>
 }
 
-@switch (state()) {
-  @case ('loading') {
-    <p class="state-box" role="status">Cargando…</p>
-  }
-  @case ('error') {
-    <div class="state-box" role="alert">
-      <p>{{ errorMessage() }}</p>
-      <button type="button" class="btn btn-sm btn-outline retry" (click)="load()">Reintentar</button>
-    </div>
-  }
-  @case ('ready') {
+<app-load-state [state]="state()" loadingMessage="Cargando…" [errorMessage]="errorMessage()" (retry)="load()">
+  @if (state() === 'ready') {
     <div class="columns">
       <div class="left">
         <section class="card card-stack" aria-labelledby="h-ciclo">
           @if (activeCycle(); as cycle) {
             <div class="card-head">
               <h2 class="p-h2 big" id="h-ciclo">Ciclo lectivo {{ cycle.year }}</h2>
-              <span [class]="cycle.open ? 'badge badge-ok' : 'badge'">
+              <app-badge [variant]="cycle.open ? 'ok' : 'neutral'">
                 {{ cycle.open ? 'Inscripción abierta' : 'Inscripción cerrada' }}
-              </span>
+              </app-badge>
             </div>
 
             <form (submit)="$event.preventDefault(); saveDates()" [formGroup]="datesForm" novalidate class="dates-form">
               <div class="dates">
-                <div class="field">
-                  <label for="s-desde">Inscripción desde</label>
+                <app-field controlId="s-desde" label="Inscripción desde" [error]="datesErrors().from" errorRole="alert">
                   <input
-                    id="s-desde"
+                    appFieldControl
                     class="input"
                     type="date"
                     formControlName="from"
-                    [attr.aria-invalid]="datesErrors().from ? 'true' : null"
-                    [attr.aria-describedby]="datesErrors().from ? 's-desde-error' : null"
                   />
-                  @if (datesErrors().from) {
-                    <p class="error" id="s-desde-error" role="alert">{{ datesErrors().from }}</p>
-                  }
-                </div>
-                <div class="field">
-                  <label for="s-hasta">Inscripción hasta</label>
+                </app-field>
+                <app-field controlId="s-hasta" label="Inscripción hasta" [error]="datesErrors().until" errorRole="alert">
                   <input
-                    id="s-hasta"
+                    appFieldControl
                     class="input"
                     type="date"
                     formControlName="until"
-                    [attr.aria-invalid]="datesErrors().until ? 'true' : null"
-                    [attr.aria-describedby]="datesErrors().until ? 's-hasta-error' : null"
                   />
-                  @if (datesErrors().until) {
-                    <p class="error" id="s-hasta-error" role="alert">{{ datesErrors().until }}</p>
-                  }
-                </div>
+                </app-field>
               </div>
               <p class="hint">
                 Fuera de estas fechas el formulario no acepta envíos ni modificaciones. Ampliar el plazo reabre
                 la inscripción.
               </p>
               @if (datesErrors().general) {
-                <p class="alert" role="alert">{{ datesErrors().general }}</p>
+                <app-alert>{{ datesErrors().general }}</app-alert>
               }
               @if (datesSaved()) {
-                <p class="alert alert-ok" role="status">Fechas guardadas.</p>
+                <app-alert variant="ok" role="status">Fechas guardadas.</app-alert>
               }
               <div class="actions">
                 <button type="submit" class="btn btn-sm btn-primary" [disabled]="datesSaving()">
@@ -106,7 +85,7 @@
             {{ copyState() === 'copied' ? 'Link copiado.' : '' }}
           </p>
           @if (copyState() === 'failed') {
-            <p class="error" role="alert">No pudimos copiarlo solo. Quedó seleccionado: copialo con Ctrl+C.</p>
+            <app-field-error message="No pudimos copiarlo solo. Quedó seleccionado: copialo con Ctrl+C." announce="alert" />
           }
         </section>
 
@@ -138,7 +117,7 @@
           </button>
         </div>
         @if (positions().length === 0) {
-          <p class="state-box">Todavía no hay puestos. Agregá el primero.</p>
+          <app-empty-state message="Todavía no hay puestos. Agregá el primero." />
         } @else {
           <div class="p-table-wrap" tabindex="0" role="region" aria-label="Tabla de materias y cargos">
             <table class="p-table positions-table">
@@ -157,13 +136,11 @@
                     <th scope="row" class="pname">
                       {{ position.name }}
                       @if (!position.active) {
-                        <span class="badge badge-error">Inactivo</span>
+                        <app-badge variant="error">Inactivo</app-badge>
                       }
                     </th>
                     <td>
-                      <span [class]="position.type === 'CARGO' ? 'badge badge-cargo' : 'badge badge-asig'">
-                        {{ position.type === 'CARGO' ? 'Cargo' : 'Asignatura' }}
-                      </span>
+                      <app-type-badge [type]="position.type" />
                     </td>
                     <td class="num">{{ position.activeCycleApplicants }}</td>
                     <td class="action">
@@ -185,7 +162,7 @@
       </section>
     </div>
   }
-}
+</app-load-state>
 
 <dialog #archiveDialog class="dialog" aria-labelledby="a-title" aria-describedby="a-text">
   <form class="dialog-body" [formGroup]="archiveForm" (submit)="$event.preventDefault(); createCycle()" novalidate>
@@ -205,53 +182,35 @@
       }
     </p>
     @if (archiveErrors().general) {
-      <p class="alert" role="alert">{{ archiveErrors().general }}</p>
+      <app-alert>{{ archiveErrors().general }}</app-alert>
     }
     @if (!activeCycle()) {
-      <div class="field">
-        <label for="a-anio">Año del ciclo</label>
+      <app-field controlId="a-anio" label="Año del ciclo" [error]="archiveErrors().year" errorRole="alert">
         <input
-          id="a-anio"
+          appFieldControl
           class="input num"
           type="number"
           inputmode="numeric"
           formControlName="year"
-          [attr.aria-invalid]="archiveErrors().year ? 'true' : null"
-          [attr.aria-describedby]="archiveErrors().year ? 'a-anio-error' : null"
         />
-        @if (archiveErrors().year) {
-          <p class="error" id="a-anio-error" role="alert">{{ archiveErrors().year }}</p>
-        }
-      </div>
+      </app-field>
     }
-    <div class="field">
-      <label for="a-desde">Inscripción desde</label>
+    <app-field controlId="a-desde" label="Inscripción desde" [error]="archiveErrors().from" errorRole="alert">
       <input
-        id="a-desde"
+        appFieldControl
         class="input"
         type="date"
         formControlName="from"
-        [attr.aria-invalid]="archiveErrors().from ? 'true' : null"
-        [attr.aria-describedby]="archiveErrors().from ? 'a-desde-error' : null"
       />
-      @if (archiveErrors().from) {
-        <p class="error" id="a-desde-error" role="alert">{{ archiveErrors().from }}</p>
-      }
-    </div>
-    <div class="field">
-      <label for="a-hasta">Inscripción hasta</label>
+    </app-field>
+    <app-field controlId="a-hasta" label="Inscripción hasta" [error]="archiveErrors().until" errorRole="alert">
       <input
-        id="a-hasta"
+        appFieldControl
         class="input"
         type="date"
         formControlName="until"
-        [attr.aria-invalid]="archiveErrors().until ? 'true' : null"
-        [attr.aria-describedby]="archiveErrors().until ? 'a-hasta-error' : null"
       />
-      @if (archiveErrors().until) {
-        <p class="error" id="a-hasta-error" role="alert">{{ archiveErrors().until }}</p>
-      }
-    </div>
+    </app-field>
     <div class="actions">
       <button type="button" class="btn btn-sm btn-outline" (click)="closeArchive()">Cancelar</button>
       <button type="submit" class="btn btn-sm btn-primary" [disabled]="archiveSaving()">
@@ -265,40 +224,28 @@
   <form class="dialog-body" [formGroup]="positionForm" (submit)="$event.preventDefault(); savePosition()" novalidate>
     <h2 class="p-h2" id="p-title">{{ editingPosition() ? 'Editar puesto' : 'Agregar puesto' }}</h2>
     @if (positionErrors().general) {
-      <p class="alert" role="alert">{{ positionErrors().general }}</p>
+      <app-alert>{{ positionErrors().general }}</app-alert>
     }
-    <div class="field">
-      <label for="p-nombre">Nombre</label>
+    <app-field controlId="p-nombre" label="Nombre" [error]="positionErrors().name" errorRole="alert">
       <input
-        id="p-nombre"
+        appFieldControl
         class="input"
         type="text"
         maxlength="80"
         autocomplete="off"
         formControlName="name"
-        [attr.aria-invalid]="positionErrors().name ? 'true' : null"
-        [attr.aria-describedby]="positionErrors().name ? 'p-nombre-error' : null"
       />
-      @if (positionErrors().name) {
-        <p class="error" id="p-nombre-error" role="alert">{{ positionErrors().name }}</p>
-      }
-    </div>
-    <div class="field">
-      <label for="p-tipo">Tipo</label>
+    </app-field>
+    <app-field controlId="p-tipo" label="Tipo" [error]="positionErrors().type" errorRole="alert">
       <select
-        id="p-tipo"
+        appFieldControl
         class="input"
         formControlName="type"
-        [attr.aria-invalid]="positionErrors().type ? 'true' : null"
-        [attr.aria-describedby]="positionErrors().type ? 'p-tipo-error' : null"
       >
         <option value="ASIGNATURA">Asignatura</option>
         <option value="CARGO">Cargo</option>
       </select>
-      @if (positionErrors().type) {
-        <p class="error" id="p-tipo-error" role="alert">{{ positionErrors().type }}</p>
-      }
-    </div>
+    </app-field>
     @if (editingPosition()) {
       <div class="field">
         <label class="check" for="p-activo">

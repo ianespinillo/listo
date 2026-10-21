@@ -24,41 +24,29 @@
       </div>
 
       @if (formError()) {
-        <p class="alert" role="alert">{{ formError() }}</p>
+        <app-alert>{{ formError() }}</app-alert>
       }
 
-      <div class="field">
-        <label for="l-email">Email</label>
+      <app-field controlId="l-email" label="Email" [error]="showRequired('email') ? 'Ingresá tu email.' : null">
         <input
-          id="l-email"
+          appFieldControl
           class="input"
           type="email"
           formControlName="email"
           autocomplete="username"
           placeholder="direccion@ejemplo.com"
-          [attr.aria-invalid]="showRequired('email') ? 'true' : null"
-          [attr.aria-describedby]="showRequired('email') ? 'l-email-error' : null"
         />
-        @if (showRequired('email')) {
-          <p class="error" id="l-email-error">Ingresá tu email.</p>
-        }
-      </div>
+      </app-field>
 
-      <div class="field">
-        <label for="l-pass">Contraseña</label>
+      <app-field controlId="l-pass" label="Contraseña" [error]="showRequired('password') ? 'Ingresá tu contraseña.' : null">
         <input
-          id="l-pass"
+          appFieldControl
           class="input"
           type="password"
           formControlName="password"
           autocomplete="current-password"
-          [attr.aria-invalid]="showRequired('password') ? 'true' : null"
-          [attr.aria-describedby]="showRequired('password') ? 'l-pass-error' : null"
         />
-        @if (showRequired('password')) {
-          <p class="error" id="l-pass-error">Ingresá tu contraseña.</p>
-        }
-      </div>
+      </app-field>
 
       <button type="submit" class="btn btn-primary" [disabled]="sending()">
         {{ sending() ? 'Ingresando…' : 'Ingresar' }}

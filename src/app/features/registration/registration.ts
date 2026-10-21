@@ -35,6 +35,11 @@ import {
 } from '../../core/format';
 import { applyServerErrors, errorOf, revalidate } from '../../core/forms';
 import { PublicHeader } from '../../shared/public-header/public-header';
+import { Alert } from '../../shared/ui/alert/alert';
+import { Badge } from '../../shared/ui/badge/badge';
+import { Field } from '../../shared/ui/field/field';
+import { FieldControl } from '../../shared/ui/field/field-control';
+import { FieldError } from '../../shared/ui/field-error/field-error';
 import { EMPLOYMENT_OPTIONS, SHIFT_OPTIONS } from './registration.labels';
 import {
   atLeastOneShift,
@@ -75,7 +80,7 @@ const REQUIRED = {
 
 @Component({
   selector: 'app-registration',
-  imports: [ReactiveFormsModule, PublicHeader],
+  imports: [ReactiveFormsModule, PublicHeader, Alert, Badge, Field, FieldControl, FieldError],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './registration.html',
   styleUrls: ['./registration.css', './registration-states.css'],

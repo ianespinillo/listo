@@ -5,23 +5,15 @@
 
 <p class="visually-hidden" role="status" aria-live="polite">{{ announcement() }}</p>
 
-@switch (state()) {
-  @case ('loading') {
-    <p class="state-box" role="status">Cargando el postulante…</p>
-  }
-  @case ('error') {
-    <div class="state-box" role="alert">
-      <p>{{ errorMessage() }}</p>
-      <button type="button" class="btn btn-sm btn-outline retry" (click)="load()">Reintentar</button>
-    </div>
-  }
-  @case ('notFound') {
-    <div class="state-box" role="alert">
-      <p>No encontramos a ese postulante. Puede que el enlace sea viejo.</p>
-      <a class="btn btn-sm btn-outline retry" routerLink="/panel">Ir al listado</a>
-    </div>
-  }
-  @case ('ready') {
+<app-load-state
+  [state]="state()"
+  loadingMessage="Cargando el postulante…"
+  [errorMessage]="errorMessage()"
+  notFoundMessage="No encontramos a ese postulante. Puede que el enlace sea viejo."
+  (retry)="load()"
+>
+  <a notFoundAction class="btn btn-sm btn-outline retry" routerLink="/panel">Ir al listado</a>
+  @if (state() === 'ready') {
     @if (applicant(); as a) {
       <div class="p-head">
         <div class="p-head-text">
@@ -48,13 +40,13 @@
       </div>
 
       @if (a.deactivated) {
-        <p class="alert alert-warn" role="note">
+        <app-alert variant="warn" role="note">
           Este postulante está dado de baja: no aparece en el listado ni en el orden de ninguna materia.
           Podés reactivarlo cuando quieras.
-        </p>
+        </app-alert>
       }
       @if (actionError()) {
-        <p class="alert" role="alert">{{ actionError() }}</p>
+        <app-alert>{{ actionError() }}</app-alert>
       }
 
       <div class="layout">
@@ -72,13 +64,7 @@
             </div>
             <div>
               <dt>Turnos</dt>
-              <dd class="chips">
-                @for (shift of orderedShifts(); track shift) {
-                  <span class="chip">{{ shiftFull[shift] }}</span>
-                } @empty {
-                  <span>Sin turnos</span>
-                }
-              </dd>
+              <dd><app-shift-chips [shifts]="a.shifts" emptyText="Sin turnos" /></dd>
             </div>
             <div><dt>Ciclo lectivo</dt><dd class="num">{{ a.cycle.year }}</dd></div>
           </dl>
@@ -91,7 +77,7 @@
               <p class="p-sub">Verificá cada puntaje contra el Listado Oficial del distrito.</p>
             </div>
             @if (a.applications.length === 0) {
-              <p class="state-box">Este postulante no tiene postulaciones.</p>
+              <app-empty-state message="Este postulante no tiene postulaciones." />
             } @else {
               <div class="p-table-wrap" tabindex="0" role="region" aria-label="Tabla de postulaciones">
                 <table class="p-table apps-table">
@@ -122,7 +108,7 @@
                             <span class="num before">antes {{ score(app.previousScore) }}</span>
                           }
                         </td>
-                        <td><span [class]="statusBadge[app.status]">{{ statusLabel[app.status] }}</span></td>
+                        <td><app-status-badge [status]="app.status" /></td>
                         <td class="right-align no-print">
                           <button
                             type="button"
@@ -201,27 +187,15 @@
       </div>
     }
   }
-}
+</app-load-state>
 
 <dialog #emailDialog class="dialog" aria-labelledby="d-email-title">
   <form class="dialog-body" (submit)="$event.preventDefault(); saveEmail()" novalidate>
     <h2 class="p-h2" id="d-email-title">Editar email</h2>
     <p class="p-sub">Usalo cuando el docente cambió de email y no puede reemplazar su inscripción.</p>
-    <div class="field">
-      <label for="d-email">Email del docente</label>
-      <input
-        id="d-email"
-        class="input"
-        type="email"
-        autocomplete="off"
-        [formControl]="emailControl"
-        [attr.aria-invalid]="emailError() ? 'true' : null"
-        [attr.aria-describedby]="emailError() ? 'd-email-error' : null"
-      />
-      @if (emailError()) {
-        <p class="error" id="d-email-error" role="alert">{{ emailError() }}</p>
-      }
-    </div>
+    <app-field controlId="d-email" label="Email del docente" [error]="emailError()" errorRole="alert">
+      <input appFieldControl class="input" type="email" autocomplete="off" [formControl]="emailControl" />
+    </app-field>
     <div class="actions">
       <button type="button" class="btn btn-sm btn-outline" (click)="closeEmail()">Cancelar</button>
       <button type="submit" class="btn btn-sm btn-primary" [disabled]="emailSending()">
@@ -239,7 +213,7 @@
       cuando quieras.
     </p>
     @if (deactivateError()) {
-      <p class="alert" role="alert">{{ deactivateError() }}</p>
+      <app-alert>{{ deactivateError() }}</app-alert>
     }
     <div class="actions">
       <button type="button" class="btn btn-sm btn-outline" (click)="closeDeactivate()">Cancelar</button>

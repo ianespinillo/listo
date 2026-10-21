@@ -16,6 +16,7 @@ import { firstValueFrom, filter, map } from 'rxjs';
 import { PanelApiService } from '../../../core/panel-api.service';
 import { PanelContext } from '../../../core/panel-context';
 import { Logo } from '../../../shared/logo/logo';
+import { Alert } from '../../../shared/ui/alert/alert';
 
 /**
  * Estructura común del panel: header verde con navegación, badge del ciclo y "Salir",
@@ -24,7 +25,7 @@ import { Logo } from '../../../shared/logo/logo';
  */
 @Component({
   selector: 'app-panel-shell',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, Logo],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, Logo, Alert],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   templateUrl: './panel-shell.html',

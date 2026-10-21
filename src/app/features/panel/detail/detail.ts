@@ -17,18 +17,19 @@ import { PanelApiService, parseApiError } from '../../../core/panel-api.service'
 import {
   EMPLOYMENT_SENTENCE,
   EMPLOYMENT_SHORT,
-  SHIFT_LABELS,
-  SHIFT_ORDER,
-  STATUS_BADGE,
-  STATUS_LABEL,
   formatDateTime,
   formatScore,
   formatSeniorityLong,
   formatSeniorityShort,
 } from '../../../core/format';
 import { EMAIL_PATTERN } from '../../../core/forms';
-
-type ViewState = 'loading' | 'ready' | 'notFound' | 'error';
+import { Alert } from '../../../shared/ui/alert/alert';
+import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { Field } from '../../../shared/ui/field/field';
+import { FieldControl } from '../../../shared/ui/field/field-control';
+import { LoadState, LoadStatus } from '../../../shared/ui/load-state/load-state';
+import { ShiftChips } from '../../../shared/ui/shift-chips/shift-chips';
+import { StatusBadge } from '../../../shared/ui/status-badge/status-badge';
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
@@ -36,7 +37,17 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 @Component({
   selector: 'app-detail',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    Alert,
+    EmptyState,
+    Field,
+    FieldControl,
+    LoadState,
+    ShiftChips,
+    StatusBadge,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'p-page' },
   templateUrl: './detail.html',
@@ -51,7 +62,7 @@ export class Detail {
   private readonly emailDialog = viewChild.required<ElementRef<HTMLDialogElement>>('emailDialog');
   private readonly deactivateDialog = viewChild.required<ElementRef<HTMLDialogElement>>('deactivateDialog');
 
-  protected readonly state = signal<ViewState>('loading');
+  protected readonly state = signal<LoadStatus>('loading');
   protected readonly errorMessage = signal('');
   protected readonly applicant = signal<ApplicantDetail | null>(null);
   /** Anuncio para el lector de pantalla tras cada acción. */
@@ -86,11 +97,6 @@ export class Detail {
   protected readonly fullName = computed(() => {
     const a = this.applicant();
     return a ? `${a.lastName}, ${a.firstName}` : '';
-  });
-
-  protected readonly orderedShifts = computed(() => {
-    const shifts = this.applicant()?.shifts ?? [];
-    return SHIFT_ORDER.filter((s) => shifts.includes(s));
   });
 
   constructor() {
@@ -319,7 +325,4 @@ export class Detail {
   protected readonly seniorityLong = formatSeniorityLong;
   protected readonly employment = EMPLOYMENT_SHORT;
   protected readonly employmentSentence = EMPLOYMENT_SENTENCE;
-  protected readonly shiftFull = SHIFT_LABELS;
-  protected readonly statusBadge = STATUS_BADGE;
-  protected readonly statusLabel = STATUS_LABEL;
 }

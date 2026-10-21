@@ -35,9 +35,8 @@
 }
 
 <form class="filters card card-stack no-print" (submit)="$event.preventDefault()" aria-label="Filtros del listado">
-  <div class="field filter-position">
-    <label for="fl-puesto">Materia o cargo</label>
-    <select id="fl-puesto" class="input" (change)="onPosition($event)">
+  <app-field class="filter-position" controlId="fl-puesto" label="Materia o cargo">
+    <select appFieldControl class="input" (change)="onPosition($event)">
       @if (selectedPositionId() === null) {
         <option value="" selected disabled>Elegí una materia o cargo</option>
       }
@@ -48,9 +47,9 @@
       }
     </select>
     @if (positionsFailed()) {
-      <p class="error" role="alert">No pudimos cargar la lista de materias.</p>
+      <app-field-error message="No pudimos cargar la lista de materias." announce="alert" />
     }
-  </div>
+  </app-field>
 
   <fieldset class="filter-shift">
     <legend>Turno</legend>
@@ -74,32 +73,24 @@
   </label>
 </form>
 
-@switch (state()) {
-  @case ('loading') {
-    <p class="state-box" role="status">Cargando el listado…</p>
-  }
-  @case ('error') {
-    <div class="state-box" role="alert">
-      <p>{{ errorMessage() }}</p>
-      <button type="button" class="btn btn-sm btn-outline retry" (click)="retry()">Reintentar</button>
-    </div>
-  }
-  @case ('notFound') {
-    <p class="state-box" role="alert">
-      No encontramos esa materia o cargo. Elegí otra en el filtro.
-    </p>
-  }
-  @case ('ready') {
+<app-load-state
+  [state]="state()"
+  loadingMessage="Cargando el listado…"
+  [errorMessage]="errorMessage()"
+  notFoundMessage="No encontramos esa materia o cargo. Elegí otra en el filtro."
+  (retry)="retry()"
+>
+  @if (state() === 'ready') {
     @if (current && !current.cycle) {
-      <p class="state-box">
+      <app-empty-state>
         No hay un ciclo activo, así que todavía no hay listado.
         <a routerLink="/panel/configuracion">Abrí un ciclo desde Ciclo y puestos</a>.
-      </p>
+      </app-empty-state>
     } @else if (current && !current.position) {
-      <p class="state-box">
+      <app-empty-state>
         Todavía no hay materias o cargos activos.
         <a routerLink="/panel/configuracion">Agregá uno desde Ciclo y puestos</a>.
-      </p>
+      </app-empty-state>
     } @else {
       <p class="rule-note">
         Orden según art. 108 C del Decreto 2485/92, texto del Decreto 900/23. El número de orden es a quién
@@ -109,7 +100,7 @@
       @for (group of groups(); track trackGroup(group)) {
         <section class="group" [class.is-busy]="busy()" [attr.aria-busy]="busy()" [attr.aria-labelledby]="'g-title-' + group.group">
           <div class="group-head">
-            <span [class]="'circle g' + group.group" aria-hidden="true">{{ group.group }}</span>
+            <app-group-circle [group]="group.group" />
             <h2 class="p-h2" [id]="'g-title-' + group.group">
               <span class="visually-hidden">Grupo {{ group.group }}: </span>{{ group.info.title }}
             </h2>
@@ -117,13 +108,13 @@
           </div>
 
           @if (group.rows.length === 0) {
-            <p class="state-box">
-              {{
+            <app-empty-state
+              [message]="
                 hasFilters()
                   ? 'Ningún postulante de este grupo coincide con los filtros.'
                   : 'Todavía no hay postulantes en este grupo.'
-              }}
-            </p>
+              "
+            />
           } @else {
             <div class="p-table-wrap" tabindex="0" role="region" [attr.aria-label]="'Tabla del grupo ' + group.group">
               <table class="p-table listing-table">
@@ -157,16 +148,10 @@
                       <td class="num">{{ seniority(row.seniorityMonths) }}</td>
                       <td class="num score" [class.hl]="group.group !== 1">{{ score(row.score) }}</td>
                       <td>
-                        <span class="shifts">
-                          @for (shift of shiftOrder; track shift) {
-                            @if (row.shifts.includes(shift)) {
-                              <span class="shift" role="img" [attr.aria-label]="shiftFull[shift]" [title]="shiftFull[shift]">{{ shiftInitial[shift] }}</span>
-                            }
-                          }
-                        </span>
+                        <app-shift-chips [shifts]="row.shifts" compact />
                       </td>
                       <td>
-                        <span [class]="statusBadge[row.status]">{{ statusLabel[row.status] }}</span>
+                        <app-status-badge [status]="row.status" />
                       </td>
                       <td class="num phone">{{ row.phone }}</td>
                       <td class="no-print action">
@@ -188,4 +173,4 @@
       }
     }
   }
-}
+</app-load-state>

@@ -26,16 +26,20 @@ import { PanelContext } from '../../../core/panel-context';
 import { Shift } from '../../../core/public-api.models';
 import {
   EMPLOYMENT_SHORT,
-  SHIFT_INITIAL,
   SHIFT_LABELS,
   SHIFT_ORDER,
-  STATUS_BADGE,
-  STATUS_LABEL,
   formatScore,
   formatSeniorityShortOrDash,
 } from '../../../core/format';
+import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { Field } from '../../../shared/ui/field/field';
+import { FieldControl } from '../../../shared/ui/field/field-control';
+import { FieldError } from '../../../shared/ui/field-error/field-error';
+import { GroupCircle } from '../../../shared/ui/group-circle/group-circle';
+import { LoadState, LoadStatus } from '../../../shared/ui/load-state/load-state';
+import { ShiftChips } from '../../../shared/ui/shift-chips/shift-chips';
+import { StatusBadge } from '../../../shared/ui/status-badge/status-badge';
 
-type ViewState = 'loading' | 'ready' | 'notFound' | 'error';
 
 interface GroupInfo {
   title: string;
@@ -70,7 +74,17 @@ function sameFilters(a: ListingFilters, b: ListingFilters): boolean {
 
 @Component({
   selector: 'app-listing',
-  imports: [RouterLink],
+  imports: [
+    RouterLink,
+    EmptyState,
+    Field,
+    FieldControl,
+    FieldError,
+    GroupCircle,
+    LoadState,
+    ShiftChips,
+    StatusBadge,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'p-page' },
   templateUrl: './listing.html',
@@ -87,7 +101,7 @@ export class Listing {
   /** Cada emisión repite el pedido con los filtros vigentes; pasa por el mismo `switchMap`. */
   private readonly retry$ = new Subject<void>();
 
-  protected readonly state = signal<ViewState>('loading');
+  protected readonly state = signal<LoadStatus>('loading');
   protected readonly errorMessage = signal('');
   /** Hay un pedido en curso (cambio de filtro): se conserva lo anterior en pantalla. */
   protected readonly busy = signal(false);
@@ -217,10 +231,6 @@ export class Listing {
 
   protected readonly employment = EMPLOYMENT_SHORT;
   protected readonly shiftFull = SHIFT_LABELS;
-  protected readonly shiftInitial = SHIFT_INITIAL;
-  protected readonly shiftOrder = SHIFT_ORDER;
-  protected readonly statusBadge = STATUS_BADGE;
-  protected readonly statusLabel = STATUS_LABEL;
   protected readonly score = formatScore;
   protected readonly seniority = formatSeniorityShortOrDash;
 }

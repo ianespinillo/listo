@@ -17,8 +17,14 @@ import { PanelApiService, parseApiError } from '../../../core/panel-api.service'
 import { PanelContext } from '../../../core/panel-context';
 import { PositionType } from '../../../core/public-api.models';
 import { formatIsoDate, todayInBuenosAires } from '../../../core/format';
-
-type ViewState = 'loading' | 'ready' | 'error';
+import { Alert } from '../../../shared/ui/alert/alert';
+import { Badge } from '../../../shared/ui/badge/badge';
+import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { Field } from '../../../shared/ui/field/field';
+import { FieldControl } from '../../../shared/ui/field/field-control';
+import { FieldError } from '../../../shared/ui/field-error/field-error';
+import { LoadState, LoadStatus } from '../../../shared/ui/load-state/load-state';
+import { TypeBadge } from '../../../shared/ui/type-badge/type-badge';
 
 const RANGE_MESSAGE = 'La fecha de cierre no puede ser anterior a la de apertura.';
 const STALE_MESSAGE = 'Se guardó, pero no pudimos actualizar la lista. Recargá la página.';
@@ -26,7 +32,17 @@ const REQUIRED_DATE = 'Ingresá la fecha.';
 
 @Component({
   selector: 'app-settings',
-  imports: [ReactiveFormsModule],
+  imports: [
+    ReactiveFormsModule,
+    Alert,
+    Badge,
+    EmptyState,
+    Field,
+    FieldControl,
+    FieldError,
+    LoadState,
+    TypeBadge,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'p-page' },
   templateUrl: './settings.html',
@@ -43,7 +59,7 @@ export class Settings implements OnInit {
   private readonly positionDialog = viewChild.required<ElementRef<HTMLDialogElement>>('positionDialog');
   private readonly linkInput = viewChild.required<ElementRef<HTMLInputElement>>('linkInput');
 
-  protected readonly state = signal<ViewState>('loading');
+  protected readonly state = signal<LoadStatus>('loading');
   protected readonly errorMessage = signal('');
   protected readonly cycles = signal<CycleItem[]>([]);
   protected readonly positions = signal<PanelPosition[]>([]);

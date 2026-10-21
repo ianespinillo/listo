@@ -7,12 +7,15 @@ import { safeReturnUrl } from '../../../core/panel-auth.guard';
 import { PanelApiService, parseApiError } from '../../../core/panel-api.service';
 import { PublicApiService } from '../../../core/public-api.service';
 import { Logo } from '../../../shared/logo/logo';
+import { Alert } from '../../../shared/ui/alert/alert';
+import { Field } from '../../../shared/ui/field/field';
+import { FieldControl } from '../../../shared/ui/field/field-control';
 
 const INVALID_CREDENTIALS = 'Email o contraseña incorrectos';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, Logo],
+  imports: [ReactiveFormsModule, Logo, Alert, Field, FieldControl],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './login.html',
   styleUrl: './login.css',

@@ -24,7 +24,7 @@
         </div>
         <div class="stack-s">
           @if (cycle(); as c) {
-            <span class="badge">Ciclo lectivo {{ c.year }}</span>
+            <app-badge>Ciclo lectivo {{ c.year }}</app-badge>
           }
           <h1 id="state-title" class="title" tabindex="-1">
             {{ closedReason() === 'notYet' ? 'La inscripción todavía no abrió' : 'La inscripción está cerrada' }}
@@ -93,7 +93,7 @@
                 <span class="summary-name">{{ s.lastName }}, {{ s.firstName }}</span>
                 <span class="num hint">DNI {{ s.dni }}</span>
               </div>
-              <span class="badge">{{ employmentLabel(s.employmentStatus) }}</span>
+              <app-badge>{{ employmentLabel(s.employmentStatus) }}</app-badge>
             </div>
             @if (s.schoolSeniorityMonths !== null) {
               <p class="hint">Antigüedad en esta escuela: <span class="num">{{ schoolSeniority(s.schoolSeniorityMonths) }}</span></p>
@@ -130,10 +130,10 @@
       <div class="state">
         <div class="stack-s">
           @if (cycle(); as c) {
-            <span class="badge badge-ok">
+            <app-badge variant="ok">
               <span class="dot" aria-hidden="true"></span>Inscripción abierta hasta el
               <span class="num">{{ dayMonth(c.registrationUntil) }}</span>
-            </span>
+            </app-badge>
           }
           <h1 id="state-title" class="title" tabindex="-1">Inscripción al listado institucional</h1>
           @if (cycle(); as c) {
@@ -156,61 +156,31 @@
           <section class="card section" aria-labelledby="h-datos">
             <h2 id="h-datos" class="section-title"><span class="step" aria-hidden="true">1</span>Tus datos</h2>
 
-            <div class="field">
-              <label for="f-lastName">Apellido</label>
-              <input id="f-lastName" class="input" type="text" formControlName="lastName" autocomplete="family-name"
-                placeholder="Ej.: Pereyra"
-                [attr.aria-invalid]="errorOf(form.controls.lastName, required.lastName) ? 'true' : null"
-                [attr.aria-describedby]="errorOf(form.controls.lastName, required.lastName) ? 'e-lastName' : null" />
-              @if (errorOf(form.controls.lastName, required.lastName); as msg) {
-                <p class="error" id="e-lastName">{{ msg }}</p>
-              }
-            </div>
+            <app-field controlId="f-lastName" label="Apellido" [error]="errorOf(form.controls.lastName, required.lastName)">
+              <input appFieldControl class="input" type="text" formControlName="lastName" autocomplete="family-name"
+                placeholder="Ej.: Pereyra" />
+            </app-field>
 
-            <div class="field">
-              <label for="f-firstName">Nombre</label>
-              <input id="f-firstName" class="input" type="text" formControlName="firstName" autocomplete="given-name"
-                placeholder="Ej.: Laura Inés"
-                [attr.aria-invalid]="errorOf(form.controls.firstName, required.firstName) ? 'true' : null"
-                [attr.aria-describedby]="errorOf(form.controls.firstName, required.firstName) ? 'e-firstName' : null" />
-              @if (errorOf(form.controls.firstName, required.firstName); as msg) {
-                <p class="error" id="e-firstName">{{ msg }}</p>
-              }
-            </div>
+            <app-field controlId="f-firstName" label="Nombre" [error]="errorOf(form.controls.firstName, required.firstName)">
+              <input appFieldControl class="input" type="text" formControlName="firstName" autocomplete="given-name"
+                placeholder="Ej.: Laura Inés" />
+            </app-field>
 
-            <div class="field">
-              <label for="f-dni">DNI</label>
-              <input id="f-dni" class="input num" type="text" inputmode="numeric" formControlName="dni"
-                autocomplete="off" placeholder="Ej.: 28123456"
-                [attr.aria-invalid]="errorOf(form.controls.dni, required.dni) ? 'true' : null"
-                [attr.aria-describedby]="errorOf(form.controls.dni, required.dni) ? 'e-dni' : null" />
-              @if (errorOf(form.controls.dni, required.dni); as msg) {
-                <p class="error" id="e-dni">{{ msg }}</p>
-              }
-            </div>
+            <app-field controlId="f-dni" label="DNI" [error]="errorOf(form.controls.dni, required.dni)">
+              <input appFieldControl class="input num" type="text" inputmode="numeric" formControlName="dni"
+                autocomplete="off" placeholder="Ej.: 28123456" />
+            </app-field>
 
-            <div class="field">
-              <label for="f-email">Email</label>
-              <input id="f-email" class="input" type="email" formControlName="email" autocomplete="email"
-                autocapitalize="none" spellcheck="false" placeholder="nombre@ejemplo.com"
-                [attr.aria-invalid]="errorOf(form.controls.email, required.email) ? 'true' : null"
-                [attr.aria-describedby]="'h-email' + (errorOf(form.controls.email, required.email) ? ' e-email' : '')" />
-              <span class="hint" id="h-email">Lo vas a necesitar, junto con tu DNI, para modificar tu inscripción.</span>
-              @if (errorOf(form.controls.email, required.email); as msg) {
-                <p class="error" id="e-email">{{ msg }}</p>
-              }
-            </div>
+            <app-field controlId="f-email" label="Email" [error]="errorOf(form.controls.email, required.email)"
+              hint="Lo vas a necesitar, junto con tu DNI, para modificar tu inscripción.">
+              <input appFieldControl class="input" type="email" formControlName="email" autocomplete="email"
+                autocapitalize="none" spellcheck="false" placeholder="nombre@ejemplo.com" />
+            </app-field>
 
-            <div class="field">
-              <label for="f-phone">Teléfono</label>
-              <input id="f-phone" class="input num" type="tel" formControlName="phone" autocomplete="tel"
-                placeholder="Ej.: 11 5555 5555"
-                [attr.aria-invalid]="errorOf(form.controls.phone, required.phone) ? 'true' : null"
-                [attr.aria-describedby]="errorOf(form.controls.phone, required.phone) ? 'e-phone' : null" />
-              @if (errorOf(form.controls.phone, required.phone); as msg) {
-                <p class="error" id="e-phone">{{ msg }}</p>
-              }
-            </div>
+            <app-field controlId="f-phone" label="Teléfono" [error]="errorOf(form.controls.phone, required.phone)">
+              <input appFieldControl class="input num" type="tel" formControlName="phone" autocomplete="tel"
+                placeholder="Ej.: 11 5555 5555" />
+            </app-field>
           </section>
 
           <!-- 2. Situación en la escuela -->
@@ -233,7 +203,7 @@
                 </label>
               }
               @if (errorOf(form.controls.employmentStatus, required.employmentStatus); as msg) {
-                <p class="error" id="e-employment">{{ msg }}</p>
+                <app-field-error elementId="e-employment" [message]="msg" />
               }
             </fieldset>
 
@@ -244,24 +214,20 @@
               ">
               <legend>Antigüedad docente</legend>
               <div class="pair">
-                <div class="field">
-                  <input id="f-seniorityYears" class="input num" type="number" inputmode="numeric" min="0" max="60"
-                    step="1" formControlName="seniorityYears" placeholder="0"
-                    [attr.aria-invalid]="errorOf(form.controls.seniorityYears, required.years) ? 'true' : null" />
-                  <label for="f-seniorityYears" class="sub">Años</label>
-                </div>
-                <div class="field">
-                  <input id="f-seniorityMonths" class="input num" type="number" inputmode="numeric" min="0" max="11"
-                    step="1" formControlName="seniorityMonths" placeholder="0"
-                    [attr.aria-invalid]="errorOf(form.controls.seniorityMonths, required.months) ? 'true' : null" />
-                  <label for="f-seniorityMonths" class="sub">Meses</label>
-                </div>
+                <app-field controlId="f-seniorityYears" label="Años" sublabel labelAfter [invalid]="!!errorOf(form.controls.seniorityYears, required.years)">
+                  <input appFieldControl class="input num" type="number" inputmode="numeric" min="0" max="60"
+                    step="1" formControlName="seniorityYears" placeholder="0" />
+                </app-field>
+                <app-field controlId="f-seniorityMonths" label="Meses" sublabel labelAfter [invalid]="!!errorOf(form.controls.seniorityMonths, required.months)">
+                  <input appFieldControl class="input num" type="number" inputmode="numeric" min="0" max="11"
+                    step="1" formControlName="seniorityMonths" placeholder="0" />
+                </app-field>
               </div>
               @if (errorOf(form.controls.seniorityYears, required.years); as msg) {
-                <p class="error" id="e-years">Años: {{ msg }}</p>
+                <app-field-error elementId="e-years" [message]="'Años: ' + msg" />
               }
               @if (errorOf(form.controls.seniorityMonths, required.months); as msg) {
-                <p class="error" id="e-months">Meses: {{ msg }}</p>
+                <app-field-error elementId="e-months" [message]="'Meses: ' + msg" />
               }
             </fieldset>
 
@@ -275,24 +241,20 @@
                 <legend>Antigüedad en esta escuela</legend>
                 <p class="hint" id="h-school">El tiempo que llevás trabajando en esta escuela. No puede superar tu antigüedad docente.</p>
                 <div class="pair">
-                  <div class="field">
-                    <input id="f-schoolYears" class="input num" type="number" inputmode="numeric" min="0" max="60"
-                      step="1" formControlName="schoolYears" placeholder="0"
-                      [attr.aria-invalid]="errorOf(form.controls.schoolYears, required.schoolYears) ? 'true' : null" />
-                    <label for="f-schoolYears" class="sub">Años</label>
-                  </div>
-                  <div class="field">
-                    <input id="f-schoolMonths" class="input num" type="number" inputmode="numeric" min="0" max="11"
-                      step="1" formControlName="schoolMonths" placeholder="0"
-                      [attr.aria-invalid]="errorOf(form.controls.schoolMonths, required.schoolMonths) ? 'true' : null" />
-                    <label for="f-schoolMonths" class="sub">Meses</label>
-                  </div>
+                  <app-field controlId="f-schoolYears" label="Años" sublabel labelAfter [invalid]="!!errorOf(form.controls.schoolYears, required.schoolYears)">
+                    <input appFieldControl class="input num" type="number" inputmode="numeric" min="0" max="60"
+                      step="1" formControlName="schoolYears" placeholder="0" />
+                  </app-field>
+                  <app-field controlId="f-schoolMonths" label="Meses" sublabel labelAfter [invalid]="!!errorOf(form.controls.schoolMonths, required.schoolMonths)">
+                    <input appFieldControl class="input num" type="number" inputmode="numeric" min="0" max="11"
+                      step="1" formControlName="schoolMonths" placeholder="0" />
+                  </app-field>
                 </div>
                 @if (errorOf(form.controls.schoolYears, required.schoolYears); as msg) {
-                  <p class="error" id="e-school-years">Años: {{ msg }}</p>
+                  <app-field-error elementId="e-school-years" [message]="'Años: ' + msg" />
                 }
                 @if (errorOf(form.controls.schoolMonths, required.schoolMonths); as msg) {
-                  <p class="error" id="e-school-months">Meses: {{ msg }}</p>
+                  <app-field-error elementId="e-school-months" [message]="'Meses: ' + msg" />
                 }
               </fieldset>
             }
@@ -313,7 +275,7 @@
                 }
               </div>
               @if (errorOf(form.controls.shifts, ''); as msg) {
-                <p class="error" id="e-shifts">{{ msg }}</p>
+                <app-field-error elementId="e-shifts" [message]="msg" />
               }
             </fieldset>
           </section>
@@ -326,9 +288,9 @@
             </p>
 
             @if (!hasPositions()) {
-              <p class="alert" role="alert">
+              <app-alert>
                 Todavía no hay materias cargadas. Comunicate con la escuela para poder inscribirte.
-              </p>
+              </app-alert>
             }
 
             <ol class="rows" formArrayName="applications">
@@ -337,11 +299,9 @@
                   <fieldset>
                     <legend>Materia {{ i + 1 }}</legend>
                     <div class="row-fields">
-                      <div class="field grow">
-                        <label [for]="'f-position-' + rowId(row)" class="sub">Materia o cargo</label>
-                        <select class="input" [id]="'f-position-' + rowId(row)" formControlName="positionId"
-                          [attr.aria-invalid]="rowPositionError(i) ? 'true' : null"
-                          [attr.aria-describedby]="rowPositionError(i) ? 'e-position-' + rowId(row) : null">
+                      <app-field class="grow" [controlId]="'f-position-' + rowId(row)" label="Materia o cargo" sublabel
+                        [error]="rowPositionError(i)" errorOutside [errorId]="'e-position-' + rowId(row)">
+                        <select appFieldControl class="input" formControlName="positionId">
                           <option [ngValue]="null">Elegí una…</option>
                           @if (subjects().length) {
                             <optgroup label="Asignaturas">
@@ -358,20 +318,19 @@
                             </optgroup>
                           }
                         </select>
-                      </div>
-                      <div class="field score-field">
-                        <label [for]="'f-score-' + rowId(row)" class="sub">Puntaje</label>
-                        <input class="input num" type="text" inputmode="decimal" autocomplete="off" placeholder="00,00"
-                          [id]="'f-score-' + rowId(row)" formControlName="score"
-                          [attr.aria-invalid]="errorOf(row.controls.score, required.score) ? 'true' : null"
-                          [attr.aria-describedby]="errorOf(row.controls.score, required.score) ? 'e-score-' + rowId(row) : null" />
-                      </div>
+                      </app-field>
+                      <app-field class="score-field" [controlId]="'f-score-' + rowId(row)" label="Puntaje" sublabel
+                        [error]="errorOf(row.controls.score, required.score)" errorOutside
+                        [errorId]="'e-score-' + rowId(row)">
+                        <input appFieldControl class="input num" type="text" inputmode="decimal" autocomplete="off"
+                          placeholder="00,00" formControlName="score" />
+                      </app-field>
                     </div>
                     @if (rowPositionError(i); as msg) {
-                      <p class="error" [id]="'e-position-' + rowId(row)" [attr.role]="isDuplicate(i) ? 'alert' : null">{{ msg }}</p>
+                      <app-field-error [elementId]="'e-position-' + rowId(row)" [message]="msg" [announce]="isDuplicate(i) ? 'alert' : null" />
                     }
                     @if (errorOf(row.controls.score, required.score); as msg) {
-                      <p class="error" [id]="'e-score-' + rowId(row)">{{ msg }}</p>
+                      <app-field-error [elementId]="'e-score-' + rowId(row)" [message]="msg" />
                     }
                   </fieldset>
                   @if (applications.length > 1) {
@@ -384,7 +343,7 @@
               }
             </ol>
             @if (errorOf(applications, ''); as msg) {
-              <p class="error">{{ msg }}</p>
+              <app-field-error [message]="msg" />
             }
 
             <button type="button" class="btn add" (click)="addApplication()">
@@ -401,17 +360,17 @@
               <span>Declaro que los datos son correctos. La dirección los va a verificar contra el Listado Oficial.</span>
             </label>
             @if (errorOf(form.controls.declaration, required.declaration); as msg) {
-              <p class="error" id="e-declaration">{{ msg }}</p>
+              <app-field-error elementId="e-declaration" [message]="msg" />
             }
           </div>
 
           @if (submitError(); as err) {
-            <div class="alert" role="alert">
+            <app-alert>
               <p>{{ err.message }}</p>
               @for (detail of err.details; track detail) {
                 <p class="alert-detail">{{ detail }}</p>
               }
-            </div>
+            </app-alert>
           }
 
           <button type="submit" class="btn btn-primary submit" [disabled]="sending()">

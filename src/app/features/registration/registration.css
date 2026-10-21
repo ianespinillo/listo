@@ -247,7 +247,8 @@ legend + * {
   flex-shrink: 0;
 }
 
-.row .error {
+.row app-field-error {
+  display: block;
   margin-top: 8px;
 }
 
