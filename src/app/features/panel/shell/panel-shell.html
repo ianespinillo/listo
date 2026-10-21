@@ -1,0 +1,47 @@
+<a class="skip-link no-print" href="/panel" (click)="skipToContent($event)">Saltar al contenido</a>
+
+<header class="p-header no-print">
+  <div class="p-header-inner">
+    <a class="p-brand" routerLink="/panel" aria-label="Listo, ir al listado">
+      <app-logo [size]="32" [inverted]="true" [label]="null" />
+      <span class="p-titles">
+        <span class="p-wordmark">Listo<span class="p-dot">.</span></span>
+        @if (ctx.schoolName()) {
+          <span class="p-school">{{ ctx.schoolName() }}</span>
+        }
+      </span>
+    </a>
+
+    <nav class="p-nav" aria-label="Secciones del panel">
+      <a
+        routerLink="/panel"
+        [class.active]="listingActive()"
+        [attr.aria-current]="listingActive() ? 'page' : null"
+        >Listado</a
+      >
+      <a
+        routerLink="/panel/configuracion"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        >Ciclo y puestos</a
+      >
+    </nav>
+
+    <div class="p-session">
+      @if (ctx.loaded()) {
+        @if (ctx.activeCycle(); as cycle) {
+          <span class="p-cycle" [class.is-open]="cycle.open">
+            Ciclo {{ cycle.year }} · inscripción {{ cycle.open ? 'abierta' : 'cerrada' }}
+          </span>
+        } @else {
+          <span class="p-cycle">Sin ciclo activo</span>
+        }
+      }
+      <button type="button" class="p-logout" [disabled]="loggingOut()" (click)="logout()">Salir</button>
+    </div>
+  </div>
+</header>
+
+<main #main id="contenido" class="p-main" tabindex="-1">
+  <router-outlet />
+</main>

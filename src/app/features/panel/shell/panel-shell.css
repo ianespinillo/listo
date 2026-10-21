@@ -1,0 +1,150 @@
+/* Header y estructura del panel. Sin encapsular: lo usan también las pantallas hijas. */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -64px;
+  z-index: 10;
+  padding: 10px 14px;
+  border-radius: var(--radio-s);
+  background: var(--tiza);
+  color: var(--tinta);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
+.p-header {
+  background: var(--pizarron);
+  color: #fff;
+}
+
+.p-header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 28px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 16px;
+}
+
+.p-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.p-brand:hover {
+  color: #fff;
+}
+
+.p-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.p-wordmark {
+  font-family: var(--fuente-titulos);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.p-dot {
+  color: var(--tiza);
+}
+
+.p-school {
+  font-size: 12px;
+  line-height: 1.2;
+  color: #d5e3d9;
+}
+
+.p-nav {
+  display: flex;
+  flex-grow: 1;
+  gap: 4px;
+}
+
+.p-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radio-s);
+  color: #d5e3d9;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.p-nav a:hover {
+  color: #fff;
+}
+
+.p-nav a.active {
+  background: var(--pizarron-hover);
+  color: #fff;
+  font-weight: 600;
+}
+
+.p-session {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+}
+
+.p-cycle {
+  padding: 5px 10px;
+  border-radius: var(--radio-pill);
+  background: var(--tiza);
+  color: var(--tinta);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.p-cycle.is-open {
+  background: var(--ok-fondo);
+  color: var(--ok-texto);
+}
+
+.p-logout {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.p-main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.p-main:focus {
+  outline: none;
+}
+
+@media (min-width: 700px) {
+  .p-main {
+    padding: 32px 24px 56px;
+  }
+
+  .p-header-inner {
+    padding: 14px 24px;
+  }
+}
