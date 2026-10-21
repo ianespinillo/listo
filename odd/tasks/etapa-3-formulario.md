@@ -15,9 +15,9 @@
 
 ## Tareas
 
-- [ ] T1. Base visual: tokens, fuentes, logo, favicon y header público.
-- [ ] T2. Servicio HTTP de la API pública (`core/`) y ruta lazy de `features/registration`.
-- [ ] T3. Componente de inscripción con sus 4 estados, `FormArray` de materias, validadores y errores del servidor por campo.
+- [x] T1. Base visual: tokens, fuentes, logo, favicon y header público. (delegated)
+- [x] T2. Servicio HTTP de la API pública (`core/`) y ruta lazy de `features/registration`. (delegated)
+- [x] T3. Componente de inscripción con sus 4 estados, `FormArray` de materias, validadores y errores del servidor por campo. (delegated; falta prueba manual en navegador)
 
 ## Aceptación
 
@@ -27,7 +27,12 @@
 
 ## Progreso / evidencia
 
-(pendiente)
+- Commit `b35026f` (T1–T3). `tsc -p tsconfig.app.json` sin errores; `pnpm build` OK sin warnings (inicial 277 kB, chunk lazy de inscripción 89 kB).
+- Smoke: `/` 200 con fuentes y `favicon.svg`; `/favicon.svg` 200 `image/svg+xml`; `/api/public/status` 200.
+- Estático: los 12 inputs/selects tienen label; el botón de quitar materia tiene `aria-label`.
+- Desvíos: texto de corrección en "Enviado" reescrito; estado "cerrada" distingue "terminó" de "todavía no abrió"; optgroups Asignaturas/Cargos; aviso si no hay puestos.
+- Fix de la Etapa 2 en esta rama: `95d5709` (`TRUST_PROXY=false` rompía el arranque; verificado tras recompilar).
+- **Pendiente (manual, navegador)**: 390 px y escritorio; navegación con teclado; alta → reemplazo → 409; cerrada (terminó / no abrió); errores 400 por campo y 429; materia repetida; consola sin errores (app sin zone.js).
 
 ## Mirror Engram
 
