@@ -1,6 +1,8 @@
 import express, { Router, type ErrorRequestHandler } from 'express';
 import { prisma } from '../db';
 import { sendError } from './errors';
+import { createPanelRouter } from './panel';
+import { DEFAULT_LOGIN_RATE_LIMIT } from './panel/session';
 import {
   createPublicRouter,
   DEFAULT_REGISTRATION_RATE_LIMIT,
@@ -12,6 +14,8 @@ export interface ApiRouterOptions {
   now?: () => Date;
   /** Límite de envíos del formulario. `false` lo desactiva. Por defecto, 10 por hora por IP. */
   registrationRateLimit?: PublicRouterOptions['registrationRateLimit'];
+  /** Límite de intentos fallidos de login. `false` lo desactiva. Por defecto, 5 cada 15 minutos por IP. */
+  loginRateLimit?: { limit: number; windowMs: number } | false;
 }
 
 const handleErrors: ErrorRequestHandler = (error, _req, res, _next) => {
@@ -56,6 +60,14 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
     createPublicRouter({
       now: options.now ?? (() => new Date()),
       registrationRateLimit: options.registrationRateLimit ?? DEFAULT_REGISTRATION_RATE_LIMIT,
+    }),
+  );
+
+  router.use(
+    '/panel',
+    createPanelRouter({
+      now: options.now ?? (() => new Date()),
+      loginRateLimit: options.loginRateLimit ?? DEFAULT_LOGIN_RATE_LIMIT,
     }),
   );
 
